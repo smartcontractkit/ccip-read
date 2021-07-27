@@ -1,0 +1,80 @@
+{
+    "name": "@ensdomains/durin",
+    "version": "0.1.0",
+    "description": "A secure protocol for offchain data retrieval",
+    "main": "dist/index.js",
+    "typings": "dist/index.d.ts",
+    "files": [
+        "dist",
+        "src"
+    ],
+    "engines": {
+        "node": ">=14"
+    },
+    "scripts": {
+        "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register 'tests/**/*.ts'",
+        "start": "tsdx watch",
+        "build": "tsdx build",
+        "tsdx-test": "tsdx test",
+        "lint": "tsdx lint",
+        "prepare": "husky install && tsdx build",
+        "size": "size-limit",
+        "analyze": "size-limit --why",
+        "format": "prettier --write \"./src/*.{js,ts}\" \"tests/*.{js,ts}\"",
+        "docs": "typedoc"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ensdomains/durin.js.git"
+    },
+    "author": "@ensdomains",
+    "module": "dist/durin.js.esm.js",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/ensdomains/durin/issues"
+    },
+    "peerDependencies": {},
+    "prettier": {
+        "printWidth": 120,
+        "semi": true,
+        "singleQuote": true,
+        "trailingComma": "es5",
+        "arrowParens": "always"
+    },
+    "size-limit": [
+        {
+            "path": "dist/durin.js.cjs.production.min.js",
+            "limit": "35 KB"
+        },
+        {
+            "path": "dist/durin.js.esm.js",
+            "limit": "35 KB"
+        }
+    ],
+    "homepage": "https://github.com/ensdomains/durin#readme",
+    "devDependencies": {
+        "@size-limit/preset-small-lib": "^4.12.0",
+        "@types/chai": "^4.2.18",
+        "@types/cors": "^2.8.12",
+        "@types/express": "^4.17.13",
+        "@types/mocha": "^8.2.2",
+        "@types/node": "^15.12.2",
+        "chai": "^4.3.4",
+        "eslint-plugin-prettier": "^3.4.0",
+        "husky": "^6.0.0",
+        "mocha": "^9.0.0",
+        "prettier": "^2.3.1",
+        "size-limit": "^4.12.0",
+        "ts-loader": "^9.2.3",
+        "ts-node": "^10.0.0",
+        "tsdx": "^0.14.1",
+        "tslib": "^2.3.0",
+        "typedoc": "^0.21.2",
+        "typescript": "^4.3.3"
+    },
+    "dependencies": {
+        "cors": "^2.8.5",
+        "ethers": "^5.3.1",
+        "express": "^4.17.1"
+    }
+}
