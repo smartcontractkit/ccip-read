@@ -75,6 +75,7 @@
     "dependencies": {
         "cors": "^2.8.5",
         "ethers": "^5.3.1",
-        "express": "^4.17.1"
+        "express": "^4.17.1",
+        "jayson": "^3.6.4"
     }
 }
