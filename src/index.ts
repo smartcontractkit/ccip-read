@@ -5,7 +5,7 @@ import { concat, hexlify } from '@ethersproject/bytes';
 import express from 'express';
 import jayson from 'jayson/promise';
 
-type HandlerFunc = (address: string, args: ethers.utils.Result) => Promise<Array<any>>;
+export type HandlerFunc = (address: string, args: ethers.utils.Result) => Promise<Array<any>>;
 
 interface Handler {
   calltype: FunctionFragment;
@@ -26,48 +26,17 @@ function typematch(a: ethers.utils.ParamType[] | undefined, b: ethers.utils.Para
   return a.every((value, index) => value === b[index]);
 }
 
-/**
- * Builder class for constructing interface definitions handled by the Durin gateway.
- */
-export class InterfaceBuilder {
-  /** @ignore */
-  readonly abi: Interface;
-  /** @ignore */
-  readonly handlers: { [selector: string]: Handler };
-
-  /** @ignore */
-  constructor(abi: Interface, handlers: { [selector: string]: Handler }) {
-    this.abi = abi;
-    this.handlers = handlers;
+function toInterface(abi: string | readonly (string | Fragment | JsonFragment)[] | Interface) {
+  if (Interface.isInterface(abi)) {
+    return abi;
   }
+  return new Interface(abi);
+}
 
-  /**
-   * Add a function handler for this interface.
-   *
-   * Durin function handlers provide a mechanism for fetching data from offchain sources
-   * and verifying it using a contract. Function handlers must take input arguments matching
-   * those of the contract function they replicate, and return arguments for the matching
-   * verification function on the same contract.
-   *
-   * @param calltype The function name or signature of the function call to handle.
-   * @param returntype The function name or signature for the handler's return data.
-   * @param func The handler function, which must accept arguments matching the input
-   *        parameters for `calltype` and return an array matching the input parameters
-   *        for `returntype`.
-   */
-  add(calltype: string, returntype: string, func: HandlerFunc) {
-    const callfunc = this.abi.getFunction(calltype);
-    const returnfunc = this.abi.getFunction(returntype);
-    if (!typematch(callfunc.outputs, returnfunc.outputs)) {
-      throw new Error(`Return types of ${calltype} and ${returntype} do not match`);
-    }
-
-    this.handlers[this.abi.getSighash(calltype)] = {
-      calltype: callfunc,
-      returntype: returnfunc,
-      func: func,
-    };
-  }
+export interface HandlerDescription {
+  calltype: string;
+  returntype: string;
+  func: HandlerFunc;
 }
 
 /**
@@ -81,12 +50,17 @@ export class InterfaceBuilder {
  *   function balanceOf(address addr) public returns(uint256);
  *   function balanceOfWithProof(address addr, uint256 balance, bytes proof) public returns(uint256);
  * `;
- * const iface = server.addInterface(abi, "0x...");
- * iface.add('balanceOf', 'balanceOfWithProof', async (contractAddress, [addr]) => {
- *   const balance = getBalance(addr);
- *   const sig = signMessage([addr, balance]);
- *   return [addr, balance, sig];
- * });
+ * server.add(abi, [
+ *   {
+ *     calltype: 'balanceOf',
+ *     returntype: 'balanceOfWithProof',
+ *     func: async (contractAddress, [addr]) => {
+ *       const balance = getBalance(addr);
+ *       const sig = signMessage([addr, balance]);
+ *       return [addr, balance, sig];
+ *     }
+ *   }
+ * ], '0x...);
  * const app = server.makeApp();
  * app.listen(8080);
  * ```
@@ -112,30 +86,39 @@ export class Server {
   }
 
   /**
-   * Returns an [[InterfaceBuilder]] that can be used to register handler functions for the provided
-   * ABI and address.
+   * Adds an interface to the gateway server, with handlers to handle some or all of its functions.
    * @param abi The contract ABI to use. This can be in any format that ethers.js recognises, including
    *        a 'Human Readable ABI', a JSON-format ABI, or an Ethers `Interface` object.
+   * @param handlers An object describing the handlers to register against this interface.
    * @param address The address of the contract. If omitted, the handler will be called for matching
    *        function calls on any address.
    * @returns An [[InterfaceBuilder]] object that can be used to register handler functions for this interface.
    */
-  addInterface(
+  add(
     abi: string | readonly (string | Fragment | JsonFragment)[] | Interface,
+    handlers: Array<HandlerDescription>,
     address?: string
-  ): InterfaceBuilder {
-    let abiInterface: Interface;
-    if (Interface.isInterface(abi)) {
-      abiInterface = abi;
-    } else {
-      abiInterface = new Interface(abi);
-    }
+  ) {
+    const abiInterface = toInterface(abi);
 
     if (this.handlers[address || ''] !== undefined) {
       throw new Error(`Interface for address ${address} already defined`);
     }
-    const handlersForAddress = (this.handlers[address || ''] = {});
-    return new InterfaceBuilder(abiInterface, handlersForAddress);
+    const handlersForAddress: { [key: string]: Handler } = (this.handlers[address || ''] = {});
+
+    for (const handler of handlers) {
+      const callfunc = abiInterface.getFunction(handler.calltype);
+      const returnfunc = abiInterface.getFunction(handler.returntype);
+      if (!typematch(callfunc.outputs, returnfunc.outputs)) {
+        throw new Error(`Return types of ${handler.calltype} and ${handler.returntype} do not match`);
+      }
+
+      handlersForAddress[Interface.getSighash(callfunc)] = {
+        calltype: callfunc,
+        returntype: returnfunc,
+        func: handler.func,
+      };
+    }
   }
 
   /**
