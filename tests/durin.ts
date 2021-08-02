@@ -42,16 +42,18 @@ describe('Durin', () => {
     const server = new Server();
     const abi = [
       'function balanceOf(address addr) public view returns(uint256)',
-      'function balanceOfWithProof(address addr) public view returns(bytes32)'
+      'function balanceOfWithProof(address addr) public view returns(bytes32)',
     ];
-    expect(() => server.add(abi, [
-      {
-        calltype: 'balanceOf',
-        returntype: 'balanceOfWithProof',
-        func: (_, [addr]) => {
-          return [addr];
-        }
-      }
-    ])).to.throw('Return types of balanceOf and balanceOfWithProof do not match');
+    expect(() =>
+      server.add(abi, [
+        {
+          calltype: 'balanceOf',
+          returntype: 'balanceOfWithProof',
+          func: (_, [addr]) => {
+            return [addr];
+          },
+        },
+      ])
+    ).to.throw('Return types of balanceOf and balanceOfWithProof do not match');
   });
 });

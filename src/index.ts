@@ -5,7 +5,7 @@ import { concat, hexlify } from '@ethersproject/bytes';
 import express from 'express';
 import jayson from 'jayson/promise';
 
-export type HandlerFunc = (address: string, args: ethers.utils.Result) => Promise<Array<any>>|Array<any>;
+export type HandlerFunc = (address: string, args: ethers.utils.Result) => Promise<Array<any>> | Array<any>;
 
 interface Handler {
   calltype: FunctionFragment;
@@ -149,7 +149,7 @@ export class Server {
     const handlersForAddress = this.handlers[to] || this.handlers[''];
     const handler = handlersForAddress?.[selector];
     if (handler === undefined) {
-      throw new Error("No matching function handler");
+      throw new Error('No matching function handler');
     }
 
     // Decode function arguments
