@@ -13,6 +13,11 @@ interface Handler {
   func: HandlerFunc;
 }
 
+interface CallArgs {
+  to: string,
+  data: string
+}
+
 function typematch(a: ethers.utils.ParamType[] | undefined, b: ethers.utils.ParamType[] | undefined): boolean {
   if (a === undefined && b === undefined) {
     return true;
@@ -81,7 +86,7 @@ export class Server {
   constructor() {
     this.handlers = {};
     this.server = new jayson.Server({
-      durin_call: this.call,
+      durin_call: this.call.bind(this),
     });
   }
 
@@ -141,7 +146,7 @@ export class Server {
     return app;
   }
 
-  async call(to: string, data: string): Promise<any> {
+  async call({ to, data }:CallArgs): Promise<any> {
     // Get the function selector
     const selector = data.slice(0, 10).toLowerCase();
 
