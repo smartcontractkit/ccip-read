@@ -14,8 +14,8 @@ interface Handler {
 }
 
 interface CallArgs {
-  to: string,
-  data: string
+  to: string;
+  data: string;
 }
 
 function typematch(a: ethers.utils.ParamType[] | undefined, b: ethers.utils.ParamType[] | undefined): boolean {
@@ -146,7 +146,7 @@ export class Server {
     return app;
   }
 
-  async call({ to, data }:CallArgs): Promise<any> {
+  async call({ to, data }: CallArgs): Promise<any> {
     // Get the function selector
     const selector = data.slice(0, 10).toLowerCase();
 
