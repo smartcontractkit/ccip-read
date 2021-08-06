@@ -65,7 +65,7 @@ export interface HandlerDescription {
  *       return [addr, balance, sig];
  *     }
  *   }
- * ], '0x...);
+ * ], '0x...');
  * const app = server.makeApp();
  * app.listen(8080);
  * ```
@@ -146,13 +146,16 @@ export class Server {
     return app;
   }
 
-  async call({ to, data }: CallArgs): Promise<any> {
+  getHandler(to: string, sighash: string): Handler | undefined {
+    return (this.handlers[to] || this.handlers[''])?.[sighash];
+  }
+
+  async call([{ to, data }]: any): Promise<any> {
     // Get the function selector
     const selector = data.slice(0, 10).toLowerCase();
 
     // Find a function handler for this selector
-    const handlersForAddress = this.handlers[to] || this.handlers[''];
-    const handler = handlersForAddress?.[selector];
+    const handler = this.getHandler(to, selector);
     if (handler === undefined) {
       throw new Error('No matching function handler');
     }
