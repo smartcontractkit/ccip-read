@@ -133,11 +133,11 @@ export class Server {
    * ```
    * @returns An `express.Application` object configured to serve as a Durin gateway.
    */
-  makeApp(): express.Application {
+  makeApp(path: string): express.Application {
     const app = express();
     app.use(cors());
     app.use(express.json());
-    app.use(this.server.middleware());
+    app.use(path, this.server.middleware());
     return app;
   }
 
