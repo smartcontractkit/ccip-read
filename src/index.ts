@@ -13,11 +13,6 @@ interface Handler {
   func: HandlerFunc;
 }
 
-interface CallArgs {
-  to: string;
-  data: string;
-}
-
 function typematch(a: ethers.utils.ParamType[] | undefined, b: ethers.utils.ParamType[] | undefined): boolean {
   if (a === undefined && b === undefined) {
     return true;
