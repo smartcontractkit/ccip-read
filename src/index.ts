@@ -5,7 +5,7 @@ import { concat, hexlify } from '@ethersproject/bytes';
 import express from 'express';
 import jayson from 'jayson/promise';
 
-export type HandlerFunc = (address: string, args: ethers.utils.Result) => Promise<Array<any>>;
+export type HandlerFunc = (address: string, args: ethers.utils.Result) => Promise<Array<any>> | Array<any>;
 
 interface Handler {
   calltype: FunctionFragment;
@@ -23,7 +23,7 @@ function typematch(a: ethers.utils.ParamType[] | undefined, b: ethers.utils.Para
   if (a.length !== b.length) {
     return false;
   }
-  return a.every((value, index) => value === b[index]);
+  return a.every((value, index) => value.type === b[index].type);
 }
 
 function toInterface(abi: string | readonly (string | Fragment | JsonFragment)[] | Interface) {
@@ -46,10 +46,10 @@ export interface HandlerDescription {
  * ```javascript
  * const durin = require('durin');
  * const server = new durin.Server();
- * const abi = `
- *   function balanceOf(address addr) public returns(uint256);
- *   function balanceOfWithProof(address addr, uint256 balance, bytes proof) public returns(uint256);
- * `;
+ * const abi = [
+ *   'function balanceOf(address addr) public returns(uint256)',
+ *   'function balanceOfWithProof(address addr, uint256 balance, bytes proof) public returns(uint256)',
+ * ];
  * server.add(abi, [
  *   {
  *     calltype: 'balanceOf',
@@ -60,7 +60,7 @@ export interface HandlerDescription {
  *       return [addr, balance, sig];
  *     }
  *   }
- * ], '0x...);
+ * ], '0x...');
  * const app = server.makeApp();
  * app.listen(8080);
  * ```
@@ -81,7 +81,7 @@ export class Server {
   constructor() {
     this.handlers = {};
     this.server = new jayson.Server({
-      durin_call: this.durin_call,
+      durin_call: this.call.bind(this),
     });
   }
 
@@ -133,23 +133,26 @@ export class Server {
    * ```
    * @returns An `express.Application` object configured to serve as a Durin gateway.
    */
-  makeApp(): express.Application {
+  makeApp(path: string): express.Application {
     const app = express();
     app.use(cors());
     app.use(express.json());
-    app.use(this.server.middleware());
+    app.use(path, this.server.middleware());
     return app;
   }
 
-  private async durin_call({ to, data }: { to: string; data: string; abi: JsonFragment }): Promise<any> {
+  getHandler(to: string, sighash: string): Handler | undefined {
+    return (this.handlers[to] || this.handlers[''])?.[sighash];
+  }
+
+  async call([{ to, data }]: any): Promise<any> {
     // Get the function selector
     const selector = data.slice(0, 10).toLowerCase();
 
     // Find a function handler for this selector
-    const handlersForAddress = this.handlers[to] || this.handlers[''];
-    const handler = handlersForAddress?.[selector];
+    const handler = this.getHandler(to, selector);
     if (handler === undefined) {
-      throw this.server.error(404, 'No matching function handler');
+      throw new Error('No matching function handler');
     }
 
     // Decode function arguments
