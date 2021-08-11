@@ -41,7 +41,7 @@ export interface HandlerDescription {
     /* If true, don't check that the return types of `calltype` and `returntype` match.
      * Useful for return functions that have dynamically determined return types.
      */
-    ignoreReturnTypeMismatch?: boolean
+    ignoreReturnTypeMismatch?: boolean;
   };
 }
 
