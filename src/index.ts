@@ -37,6 +37,12 @@ export interface HandlerDescription {
   calltype: string;
   returntype: string;
   func: HandlerFunc;
+  options?: {
+    /* If true, don't check that the return types of `calltype` and `returntype` match.
+     * Useful for return functions that have dynamically determined return types.
+     */
+    ignoreReturnTypeMismatch?: boolean
+  };
 }
 
 /**
@@ -109,7 +115,7 @@ export class Server {
     for (const handler of handlers) {
       const callfunc = abiInterface.getFunction(handler.calltype);
       const returnfunc = abiInterface.getFunction(handler.returntype);
-      if (!typematch(callfunc.outputs, returnfunc.outputs)) {
+      if (!handler.options?.ignoreReturnTypeMismatch && !typematch(callfunc.outputs, returnfunc.outputs)) {
         throw new Error(`Return types of ${handler.calltype} and ${handler.returntype} do not match`);
       }
 
