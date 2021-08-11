@@ -11,18 +11,15 @@ const{
   PRIVATE_KEY,
   TOKEN_ADDRESS
 } = process.env
-console.log(1)
 const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
-console.log(2)
 let signer = new ethers.Wallet(PRIVATE_KEY);
-console.log(3)
 
 server.add(abi, [
   {
     calltype: 'balanceOf',
     returntype: 'balanceOfWithProof',
-    func: async (contractAddress:string, addr:string[]) => {
-      console.log(4)
+    func: async (contractAddress:string, addresses:string[]) => {
+      const addr = addresses[0]
       const erc20 = new ethers.Contract(contractAddress, abi, provider);
       const balance = await erc20.balanceOf(addr);      
       let messageHash = ethers.utils.solidityKeccak256(
@@ -34,7 +31,5 @@ server.add(abi, [
     }
   }
 ], TOKEN_ADDRESS);
-console.log(5)
-const app = server.makeApp();
-console.log(6)
+const app = server.makeApp('/rpc');
 app.listen(8080);

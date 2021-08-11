@@ -31,16 +31,16 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "name": "trusted-gateway-token",
+  "name": "client",
   "author": "Makoto Inoue",
-  "module": "dist/trusted-gateway-token.esm.js",
+  "module": "dist/client.esm.js",
   "size-limit": [
     {
-      "path": "dist/trusted-gateway-token.cjs.production.min.js",
+      "path": "dist/client.cjs.production.min.js",
       "limit": "10 KB"
     },
     {
-      "path": "dist/trusted-gateway-token.esm.js",
+      "path": "dist/client.esm.js",
       "limit": "10 KB"
     }
   ],
@@ -53,9 +53,10 @@
     "typescript": "^4.3.5"
   },
   "dependencies": {
-    "@ensdomains/durin": "https://github.com/ensdomains/durin",
+    "@types/node-fetch": "^2.5.12",
     "dotenv": "^10.0.0",
     "ethers": "^5.4.4",
-    "ts-node": "^10.2.0"
+    "jayson": "^3.6.4",
+    "node-fetch": "^2.6.1"
   }
 }
