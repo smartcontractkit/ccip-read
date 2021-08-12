@@ -49,7 +49,11 @@ contract Token is ERC20, Ownable {
     if(claimed[addr]){
       return super.balanceOf(addr);
     }else{
-      revert OffchainLookup(url, abi.encodeWithSelector(Token.balanceOfWithProof.selector, addr));
+      revert OffchainLookup(url,
+        // Selector does not seem to work against public function
+        // abi.encodeWithSelector(Token.balanceOfWithProof.selector, addr)
+        abi.encodeWithSignature("balanceOfWithProof(address addr, BalanceProof memory proof)", addr)
+      );
     }
   }
 
@@ -62,23 +66,29 @@ contract Token is ERC20, Ownable {
     return true;
   }
 
-  function balanceOfWithProof(address addr, BalanceProof memory proof) external view returns(uint) {
-    address recovered = recoverAddress(
-      keccak256(abi.encodePacked(proof.balance, addr)),
-      proof.signature
-    );
-    require(_signer == recovered, "Signer is not the signer of the token");
-    return proof.balance;
+  function balanceOfWithProof(address addr, BalanceProof memory proof) public view returns(uint) {
+    uint balance = super.balanceOf(addr);
+    if(claimed[addr]){
+      return balance;
+    }else{
+      address recovered = recoverAddress(
+        keccak256(abi.encodePacked(proof.balance, addr)),
+        proof.signature
+      );
+      require(_signer == recovered, "Signer is not the signer of the token");
+      return balance + proof.balance;
+    }
   }
 
   function transferWithProof(address recipient, uint256 amount, BalanceProof memory proof) external returns(uint) {
-    address recovered = recoverAddress(
-      keccak256(abi.encodePacked(proof.balance, msg.sender)),
-      proof.signature
-    );
-    require(_signer == recovered, "Signer is not the signer of the token");
+    uint l1Balance = super.balanceOf(msg.sender);
+    uint balance = balanceOfWithProof(msg.sender, proof);
+    uint diff = balance - l1Balance;
     claimed[msg.sender] = true;
-    _mint(recipient, amount);
+    if(diff > 0){
+      _mint(msg.sender, diff);
+    }
+    _transfer(msg.sender, recipient, amount);
   }
 
   function recoverAddress(bytes32 messageHash, bytes memory signature) internal pure returns(address) {
