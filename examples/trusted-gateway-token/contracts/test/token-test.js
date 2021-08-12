@@ -1,5 +1,18 @@
 const { expect } = require("chai");
 
+async function generateProof(signer, balance, address){
+  const messageHash = ethers.utils.solidityKeccak256(
+    ['uint', 'address'],[balance, address]
+  );
+  const messageHashBinary = ethers.utils.arrayify(messageHash);
+  const signature = await signer.signMessage(messageHashBinary);
+  const proof = {
+    signature,
+    balance
+  };
+  return proof;
+}
+
 describe("Token", function () {
   let initial_supply, name, symbol, owner, tokensigner, account2, signers, Token, token, url
   before(async () => {
@@ -42,16 +55,7 @@ describe("Token", function () {
 
   it("balanceOfWithProof", async function (){
     const balance = 2
-    messageHash = ethers.utils.solidityKeccak256(
-      ['uint', 'address'],[balance, account2.address]
-    );
-    let messageHashBinary = ethers.utils.arrayify(messageHash);
-    let signature = await tokensigner.signMessage(messageHashBinary);
-    proof = {
-      signature,
-      balance
-    };
-
+    proof = await generateProof(tokensigner, balance, account2.address)
     let newBalance = await token.balanceOfWithProof(account2.address, proof)
     expect(newBalance).to.equal(balance);
   })
@@ -75,15 +79,7 @@ describe("Token", function () {
       expect(error.message).to.match(/OffchainLookup/)
     }
     const balance = 2
-    messageHash = ethers.utils.solidityKeccak256(
-      ['uint', 'address'],[balance, account2.address]
-    );
-    let messageHashBinary = ethers.utils.arrayify(messageHash);
-    let signature = await tokensigner.signMessage(messageHashBinary);
-    proof = {
-      signature,
-      balance
-    };
+    proof = await generateProof(tokensigner, balance, account2.address)
     await token2.transferWithProof(account2.address, balance, proof)
     const newBalance = await token.balanceOf(account2.address);
     expect(newBalance).to.equal(balance);
