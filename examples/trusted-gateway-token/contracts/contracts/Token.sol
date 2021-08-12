@@ -54,14 +54,16 @@ contract Token is ERC20, Ownable {
   }
 
   function balanceOfWithProof(address addr, BalanceProof memory proof) external view returns(uint) {
-    address recovered = recoverAddress(addr, proof);
+    address recovered = recoverAddress(
+      keccak256(abi.encodePacked(proof.balance, addr)),
+      proof.signature
+    );
     require(_signer == recovered, "Signer is not the domain owner");
     return proof.balance;
   }
 
-  function recoverAddress(address addr, BalanceProof memory proof) internal pure returns(address) {
-    (uint8 v, bytes32 r, bytes32 s) = splitSignature(proof.signature);
-    bytes32 messageHash = keccak256(abi.encodePacked(proof.balance, addr));
+  function recoverAddress(bytes32 messageHash, bytes memory signature) internal pure returns(address) {
+    (uint8 v, bytes32 r, bytes32 s) = splitSignature(signature);
     bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
     return ecrecover(ethSignedMessageHash, v, r, s);
   }

@@ -43,7 +43,7 @@ describe("Token", function () {
   it("balanceOfWithProof", async function (){
     const balance = 2
     messageHash = ethers.utils.solidityKeccak256(
-      ['uint', 'address'],[balance3, account2.address]
+      ['uint', 'address'],[balance, account2.address]
     );
     let messageHashBinary = ethers.utils.arrayify(messageHash);
     let signature = await signer.signMessage(messageHashBinary);
