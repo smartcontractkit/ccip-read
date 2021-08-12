@@ -69,19 +69,20 @@ describe("Token", function () {
     }
   })
 
-  it("transferWithProof transfers to self", async function (){
+  it("transferWithProof transfers to recipient", async function (){
     let recipient = signers[5]
     let token2 = token.connect(account2)
     try {
-      await token.balanceOf(account2.address);
+      await token.balanceOf(recipient.address);
     } catch (error) {
       console.log(error.message);
       expect(error.message).to.match(/OffchainLookup/)
     }
     const balance = 2
     proof = await generateProof(tokensigner, balance, account2.address)
-    await token2.transferWithProof(account2.address, balance, proof)
-    const newBalance = await token.balanceOf(account2.address);
+    await token2.transferWithProof(recipient.address, balance, proof)
+    const zeroProof = await generateProof(tokensigner, 0, recipient.address)
+    const newBalance = await token.balanceOfWithProof(recipient.address, zeroProof);
     expect(newBalance).to.equal(balance);
   })
 });
