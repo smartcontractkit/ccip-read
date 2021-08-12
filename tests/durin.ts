@@ -77,6 +77,26 @@ describe('Durin', () => {
         ])
       ).to.throw('Return types of balanceOf and balanceOfWithProof do not match');
     });
+
+    it('allows call and return functions to have different return types if a flag is set', () => {
+      const server = new Server();
+      const abi = [
+        'function balanceOf(address addr) public view returns(uint256)',
+        'function balanceOfWithProof(address addr) public view returns(bytes32)',
+      ];
+      server.add(abi, [
+        {
+          calltype: 'balanceOf',
+          returntype: 'balanceOfWithProof',
+          func: (_, [addr]) => {
+            return [addr];
+          },
+          options: {
+            ignoreReturnTypeMismatch: true,
+          },
+        },
+      ]);
+    });
   });
 
   describe('end-to-end tests', () => {
