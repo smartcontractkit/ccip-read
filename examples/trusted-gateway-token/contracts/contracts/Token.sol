@@ -30,7 +30,7 @@ contract Token is ERC20, Ownable {
       string memory symbol,
       uint256 initialSupply
   ) ERC20(name, symbol) {
-      _mint(msg.sender, initialSupply);
+    _mint(msg.sender, initialSupply);
   }
 
   function setUrl(string memory url_) external onlyOwner{
@@ -53,13 +53,32 @@ contract Token is ERC20, Ownable {
     }
   }
 
+  function transfer(address recipient, uint256 amount) public override returns (bool) {
+    if(claimed[msg.sender]){
+      _transfer(msg.sender, recipient, amount);
+    }else{
+      revert OffchainLookup(url, abi.encodeWithSelector(Token.transferWithProof.selector, recipient, amount));
+    }
+    return true;
+  }
+
   function balanceOfWithProof(address addr, BalanceProof memory proof) external view returns(uint) {
     address recovered = recoverAddress(
       keccak256(abi.encodePacked(proof.balance, addr)),
       proof.signature
     );
-    require(_signer == recovered, "Signer is not the domain owner");
+    require(_signer == recovered, "Signer is not the signer of the token");
     return proof.balance;
+  }
+
+  function transferWithProof(address recipient, uint256 amount, BalanceProof memory proof) external returns(uint) {
+    address recovered = recoverAddress(
+      keccak256(abi.encodePacked(proof.balance, msg.sender)),
+      proof.signature
+    );
+    require(_signer == recovered, "Signer is not the signer of the token");
+    claimed[msg.sender] = true;
+    _mint(recipient, amount);
   }
 
   function recoverAddress(bytes32 messageHash, bytes memory signature) internal pure returns(address) {
