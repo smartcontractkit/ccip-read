@@ -85,7 +85,7 @@ contract Token is ERC20, Ownable {
     }
   }
 
-  function transferWithProof(address recipient, uint256 amount, BalanceProof memory proof) external returns(uint) {
+  function transferWithProof(address recipient, uint256 amount, BalanceProof memory proof) external returns(bool) {
     uint l1Balance = super.balanceOf(msg.sender);
     uint balance = balanceOfWithProof(msg.sender, proof);
     uint diff = balance - l1Balance;
