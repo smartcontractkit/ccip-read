@@ -4,10 +4,40 @@ const server = new durin.Server();
 const fs = require('fs');
 require('dotenv').config({ path: '../.env' })
 
+// const abi = [
+//   "function balanceOf(address addr) view returns (uint256)",
+//   "function balanceOfWithProof(address addr, bytes proof) view returns (uint256)"
+// ];
 const abi = [
-  "function balanceOf(address addr) view returns (uint256)",
-  "function balanceOfWithProof(address addr, uint256 balance, bytes proof) view returns (uint256)"
-];
+  {
+    "inputs":[
+      {"internalType":"address","name":"addr","type":"address"}
+    ],
+    "name":"balanceOf",
+    "outputs":[
+      {"internalType":"uint256","name":"balance","type":"uint256"}
+    ],
+    "stateMutability":"view",
+    "type":"function"
+  },{
+    "inputs":[
+      {"internalType":"address","name":"addr","type":"address"},
+      {"components":[
+        {"internalType":"bytes","name":"signature","type":"bytes"},
+        {"internalType":"uint256","name":"balance","type":"uint256"}
+      ],
+      "internalType":"struct Token.BalanceProof",
+      "name":"proof",
+      "type":"tuple"
+    }],
+    "name":"balanceOfWithProof",
+    "outputs":[
+      {"internalType":"uint256","name":"","type":"uint256"}
+    ],
+    "stateMutability":"view","type":"function"
+  }]
+
+console.log({abi})
 const{
   PROVIDER_URL,
   PRIVATE_KEY,
@@ -33,7 +63,6 @@ const balances = data.reduce((map:any, obj:any) => {
   map[key] = parseInt(val);
   return map;
 }, {});
-console.log(4, {balances})
 server.add(abi, [
   {
     calltype: 'balanceOf',
@@ -41,12 +70,14 @@ server.add(abi, [
     func: async (_contractAddress:string, addresses:string[]) => {
       const addr = addresses[0]
       const balance = balances[addr] || 0
+      console.log('***add:input', {addr, balance})
       let messageHash = ethers.utils.solidityKeccak256(
-        ['address', 'uint256'],[addr, balance]
+        ['uint256', 'address'],[balance, addr]
       );
       let messageHashBinary = ethers.utils.arrayify(messageHash);
-      const sig = await signer.signMessage(messageHashBinary)
-      return [addr, balance, sig];
+      const signature = await signer.signMessage(messageHashBinary)
+      console.log('***add:output', [addr, {balance, signature}])
+      return [addr, {balance, signature}];
     }
   }
 ], '');

@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-
+import "hardhat/console.sol";
 /**
  * @title Token
  * @dev Very simple ERC20 Token example, where all tokens are pre-assigned to the creator.
@@ -71,10 +71,15 @@ contract Token is ERC20, Ownable {
     if(claimed[addr]){
       return balance;
     }else{
+      console.log("balance %s", proof.balance );
+      console.log("addr %s", addr );
+      // console.log( proof.signature );
       address recovered = recoverAddress(
         keccak256(abi.encodePacked(proof.balance, addr)),
         proof.signature
       );
+      console.log("_signer %s", _signer );
+      console.log("recovered %s", recovered );
       require(_signer == recovered, "Signer is not the signer of the token");
       return balance + proof.balance;
     }

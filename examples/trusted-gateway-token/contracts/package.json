@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "npx hardhat test"
+    "test": "npx hardhat test",
+    "deploy": "npx hardhat run --network localhost scripts/deploy.js"
   },
   "author": "Makoto Inoue",
   "license": "ISC",
