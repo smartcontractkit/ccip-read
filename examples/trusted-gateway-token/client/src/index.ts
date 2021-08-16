@@ -7,19 +7,20 @@ const abi = JSON.parse(fs.readFileSync('../contracts/artifacts/contracts/Token.s
 const{
   TOKEN_ADDRESS,
   PROVIDER_URL,
-  USER_ADDRESS
+  USER_ADDRESS:string
 } = process.env
-
+const RECIPIENT = '0x8626f6940e2eb28930efb4cef49b2d1f2c9c1199'
 const client = new jayson.client.http({
   port: 8080
 });
-async function main(){
+
+async function getBalance(address: string){
   const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
   const erc20 = new ethers.Contract(TOKEN_ADDRESS, abi, provider);
   // let url, body, to, data
   try{
     const signer = await erc20.getSigner()
-    const balance = await erc20.balanceOf(USER_ADDRESS);
+    const balance = await erc20.balanceOf(address);
     console.log({signer, balance})
   }catch(e){
     if(e.message.match(/OffchainLookup/)){
@@ -29,8 +30,7 @@ async function main(){
       // data = "0x70a08231000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 
       const iface = new ethers.utils.Interface(abi)
-      console.log({USER_ADDRESS, TOKEN_ADDRESS})
-      const data = iface.encodeFunctionData("balanceOf(address addr)", [USER_ADDRESS])
+      const data = iface.encodeFunctionData("balanceOf(address addr)", [address])
       const body = {
         jsonrpc: '2.0',
         method: 'durin_call',
@@ -43,16 +43,20 @@ async function main(){
         body:    JSON.stringify(body),
         headers: { 'Content-Type': 'application/json' },
       })).json()
-      console.log({ result })
       const {addr, proof} = iface.decodeFunctionData("balanceOfWithProof", result.result);
-      console.log({addr, proof})
       const balance = await erc20.balanceOfWithProof(addr, proof);
-      console.log({balance})
+      return balance
   
     }else{
       console.log({e})
     }
   }
+}
+
+async function main(){
+  const address = process.env.USER_ADDRESS;
+  console.log(`USER_ADDRESS ${address} balance ${await getBalance( address || '')}`)
+  console.log(`RECIPIENT ${RECIPIENT} balance ${await getBalance( RECIPIENT )}` )
 }
 
 main()
