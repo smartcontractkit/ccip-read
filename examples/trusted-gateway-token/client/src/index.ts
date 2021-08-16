@@ -14,23 +14,28 @@ const client = new jayson.client.http({
   port: 8080
 });
 
+const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
+const erc20 = new ethers.Contract(TOKEN_ADDRESS, abi, provider);
+
 async function getBalance(address: string){
-  const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
-  const erc20 = new ethers.Contract(TOKEN_ADDRESS, abi, provider);
   // let url, body, to, data
   try{
     const signer = await erc20.getSigner()
     const balance = await erc20.balanceOf(address);
     console.log({signer, balance})
   }catch(e){
+    
     if(e.message.match(/OffchainLookup/)){
-      // url = "https://localhost:8080/rpc", 
-      // body = "0x4961ed12000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb92266"
-      // to = "0x5fbdb2315678afecb367f032d93f642f64180aa3"
-      // data = "0x70a08231000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb92266"
-
+      // Custom error example
+      // OffchainLookup(
+      //  "https://localhost:8080/rpc",
+      //  "0x4961ed120000000000000000000000004627bd7d658ee1474b3f1da1f9ff0bde6b720fcd"
+      // )
+      const url = "http://localhost:8080/rpc"
       const iface = new ethers.utils.Interface(abi)
-      const data = iface.encodeFunctionData("balanceOf(address addr)", [address])
+      // "0x4961ed120000000000000000000000004627bd7d658ee1474b3f1da1f9ff0bde6b720fcd"
+      const data = iface.encodeFunctionData("balanceOf", [address])
+      console.log({data})
       const body = {
         jsonrpc: '2.0',
         method: 'durin_call',
@@ -38,7 +43,7 @@ async function getBalance(address: string){
         id: 1,
       }
 
-      const result  = await (await nodeFetch('http://localhost:8080/rpc', {
+      const result  = await (await nodeFetch(url, {
         method: 'post',
         body:    JSON.stringify(body),
         headers: { 'Content-Type': 'application/json' },
