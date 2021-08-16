@@ -2,7 +2,8 @@ const nodeFetch = require('node-fetch');
 const ethers = require('ethers');
 const jayson = require('jayson');
 require('dotenv').config({ path: '../.env' })
-
+const fs = require('fs');
+const abi = JSON.parse(fs.readFileSync('../contracts/artifacts/contracts/Token.sol/Token.json', 'utf8')).abi
 const{
   TOKEN_ADDRESS,
   PROVIDER_URL,
@@ -12,36 +13,6 @@ const{
 const client = new jayson.client.http({
   port: 8080
 });
-const abi = [
-  {
-    "inputs":[
-      {"internalType":"address","name":"addr","type":"address"}
-    ],
-    "name":"balanceOf",
-    "outputs":[
-      {"internalType":"uint256","name":"balance","type":"uint256"}
-    ],
-    "stateMutability":"view",
-    "type":"function"
-  },{
-    "inputs":[
-      {"internalType":"address","name":"addr","type":"address"},
-      {"components":[
-        {"internalType":"bytes","name":"signature","type":"bytes"},
-        {"internalType":"uint256","name":"balance","type":"uint256"}
-      ],
-      "internalType":"struct Token.BalanceProof",
-      "name":"proof",
-      "type":"tuple"
-    }],
-    "name":"balanceOfWithProof",
-    "outputs":[
-      {"internalType":"uint256","name":"","type":"uint256"}
-    ],
-    "stateMutability":"view","type":"function"
-  },
-  'function getSigner() view returns (address)'
-]
 async function main(){
   const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
   const erc20 = new ethers.Contract(TOKEN_ADDRESS, abi, provider);

@@ -3,41 +3,8 @@ const ethers = require('ethers');
 const server = new durin.Server();
 const fs = require('fs');
 require('dotenv').config({ path: '../.env' })
+const abi = JSON.parse(fs.readFileSync('../contracts/artifacts/contracts/Token.sol/Token.json', 'utf8')).abi
 
-// const abi = [
-//   "function balanceOf(address addr) view returns (uint256)",
-//   "function balanceOfWithProof(address addr, bytes proof) view returns (uint256)"
-// ];
-const abi = [
-  {
-    "inputs":[
-      {"internalType":"address","name":"addr","type":"address"}
-    ],
-    "name":"balanceOf",
-    "outputs":[
-      {"internalType":"uint256","name":"balance","type":"uint256"}
-    ],
-    "stateMutability":"view",
-    "type":"function"
-  },{
-    "inputs":[
-      {"internalType":"address","name":"addr","type":"address"},
-      {"components":[
-        {"internalType":"bytes","name":"signature","type":"bytes"},
-        {"internalType":"uint256","name":"balance","type":"uint256"}
-      ],
-      "internalType":"struct Token.BalanceProof",
-      "name":"proof",
-      "type":"tuple"
-    }],
-    "name":"balanceOfWithProof",
-    "outputs":[
-      {"internalType":"uint256","name":"","type":"uint256"}
-    ],
-    "stateMutability":"view","type":"function"
-  }]
-
-console.log({abi})
 const{
   PROVIDER_URL,
   PRIVATE_KEY,
@@ -49,9 +16,7 @@ console.log({
   ADDRESS_FILE_PATH
 })
 const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
-console.log(1)
 let signer = new ethers.Wallet(PRIVATE_KEY);
-console.log(2)
 const data = fs.readFileSync(ADDRESS_FILE_PATH, 'utf8')
   .split("\n")
   .slice(1) // Remove the header
