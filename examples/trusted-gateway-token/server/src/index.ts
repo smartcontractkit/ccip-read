@@ -32,16 +32,25 @@ server.add(abi, [
   {
     calltype: 'balanceOf',
     returntype: 'balanceOfWithProof',
-    func: async (_contractAddress:string, addresses:string[]) => {
-      const addr = addresses[0]
+    func: async (args:string[], context:any) => {
+      console.log('***', {args, context})
+      // args: [
+      //   '0x4627Bd7D658Ee1474B3f1Da1F9fF0BdE6b720FCd',
+      //   addr: '0x4627Bd7D658Ee1474B3f1Da1F9fF0BdE6b720FCd'
+      // ],
+      // context: {
+      //   to: '0x0165878A594ca255338adfa4d48449f69242Eb8F',
+      //   data: '0x70a082310000000000000000000000004627bd7d658ee1474b3f1da1f9ff0bde6b720fcd'
+      // }
+      const addr  = args[0]
       const balance = balances[addr] || 0
-      console.log('***add:input', {addr, balance})
+      console.log('***balanceOf:input', {addr, balance})
       let messageHash = ethers.utils.solidityKeccak256(
         ['uint256', 'address'],[balance, addr]
       );
       let messageHashBinary = ethers.utils.arrayify(messageHash);
       const signature = await signer.signMessage(messageHashBinary)
-      console.log('***add:output', [addr, {balance, signature}])
+      console.log('***balanceOf:output', [addr, {balance, signature}])
       return [addr, {balance, signature}];
     }
   }

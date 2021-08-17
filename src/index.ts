@@ -1,11 +1,11 @@
 import cors from 'cors';
-import { ethers } from 'ethers';
+import { BytesLike, ethers } from 'ethers';
 import { Fragment, FunctionFragment, Interface, JsonFragment } from '@ethersproject/abi';
 import { concat, hexlify } from '@ethersproject/bytes';
 import express from 'express';
 import jayson from 'jayson/promise';
-
-export type HandlerFunc = (address: string, args: ethers.utils.Result) => Promise<Array<any>> | Array<any>;
+import { TransactionRequest } from '@ethersproject/abstract-provider';
+export type HandlerFunc = (args: ethers.utils.Result, context: TransactionRequest) => Promise<Array<any>> | Array<any>;
 
 interface Handler {
   calltype: FunctionFragment;
@@ -151,8 +151,11 @@ export class Server {
     return (this.handlers[to] || this.handlers[''])?.[sighash];
   }
 
-  async call([{ to, data }]: any): Promise<any> {
+  async call(contextArgs: TransactionRequest[]): Promise<any> {
+    const context = contextArgs[0]
     // Get the function selector
+    const data = ethers.utils.hexlify(context.data as BytesLike);
+    const to = ethers.utils.hexlify(context.to as BytesLike);
     const selector = data.slice(0, 10).toLowerCase();
 
     // Find a function handler for this selector
@@ -165,7 +168,7 @@ export class Server {
     const args = ethers.utils.defaultAbiCoder.decode(handler.calltype.inputs, '0x' + data.slice(10));
 
     // Call the handler
-    const result = await handler.func(to, args);
+    const result = await handler.func(args, context);
 
     // Encode return data
     return hexlify(
