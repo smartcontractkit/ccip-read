@@ -9,21 +9,29 @@ const abi = JSON.parse(
     'utf8'
   )
 ).abi;
-const { TOKEN_ADDRESS, PROVIDER_URL, USER_ADDRESS: string } = process.env;
+const {
+  TOKEN_ADDRESS,
+  PROVIDER_URL,
+  SENDER_PRIVATE_KEY
+} = process.env;
 const RECIPIENT = '0x8626f6940e2eb28930efb4cef49b2d1f2c9c1199';
 const client = new jayson.client.http({
   port: 8080,
 });
 
 const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
-const erc20 = new ethers.Contract(TOKEN_ADDRESS, abi, provider);
+const signer = new ethers.Wallet(SENDER_PRIVATE_KEY);
 
+const erc20 = new ethers.Contract(TOKEN_ADDRESS, abi, provider);
+const SENDER_ADDRESS = signer.address
+console.log({
+  TOKEN_ADDRESS,
+  SENDER_ADDRESS
+})
 async function getBalance(address: string) {
   // let url, body, to, data
   try {
-    const signer = await erc20.getSigner();
-    const balance = await erc20.balanceOf(address);
-    console.log({ signer, balance });
+    return await erc20.balanceOf(address);
   } catch (e) {
     if (e.message.match(/OffchainLookup/)) {
       // Custom error example
@@ -48,23 +56,70 @@ async function getBalance(address: string) {
           headers: { 'Content-Type': 'application/json' },
         })
       ).json();
-
-      const balanceData = await provider.call({
+      const outputdata = await provider.call({
         to: TOKEN_ADDRESS,
         data: result.result,
       });
-      return iface.decodeFunctionResult('balanceOfWithProof', balanceData);
+      return iface.decodeFunctionResult('balanceOfWithProof', outputdata);
     } else {
       console.log({ e });
     }
   }
 }
 
+async function transfer(fromAddress: string, toAddress: string, amount: number){
+  try{
+    // const signer = await erc20.attach(fromAddress).getSigner()
+    const tx = await erc20.estimateGas.transfer(toAddress, amount);
+    // console.log({signer, tx})
+    console.log({fromAddress, toAddress, amount, tx})
+  }catch(e){
+    // console.log({e})
+    if(e.message.match(/OffchainLookup/)){
+      // Custom error example
+      // OffchainLookup(
+      //  "https://localhost:8080/rpc",
+      //  "0x0b09dbd30000000000000000000000008626f6940e2eb28930efb4cef49b2d1f2c9c11990000000000000000000000000000000000000000000000000000000000000001"
+      // )
+      const url = "http://localhost:8080/rpc"
+      const iface = new ethers.utils.Interface(abi)
+      // "0x4961ed120000000000000000000000004627bd7d658ee1474b3f1da1f9ff0bde6b720fcd"
+      const inputdata = iface.encodeFunctionData("transfer", [toAddress, amount])
+      // console.log({data})
+      const body = {
+        jsonrpc: '2.0',
+        method: 'durin_call',
+        params: [{to:TOKEN_ADDRESS, from:fromAddress, data:inputdata}],
+        id: 1,
+      }
+
+      const result:any  = await (await nodeFetch(url, {
+        method: 'post',
+        body:    JSON.stringify(body),
+        headers: { 'Content-Type': 'application/json' },
+      })).json()
+      const nonce = await provider.getTransactionCount(signer.address)
+      const signedTransaction = await signer.signTransaction({
+        nonce,
+        gasLimit: 500000,
+        gasPrice: ethers.BigNumber.from("1000000000"),
+        to: TOKEN_ADDRESS,
+        data: result.result,
+      });
+      await provider.sendTransaction(signedTransaction)
+    }else{
+      console.log({e})
+    }
+  }
+}
+
 async function main() {
-  const address = process.env.USER_ADDRESS;
-  console.log(
-    `USER_ADDRESS ${address} balance ${await getBalance(address || '')}`
-  );
+  const amount = 1
+  console.log(`SENDER ${SENDER_ADDRESS} balance ${await getBalance(SENDER_ADDRESS || '')}`);
+  console.log(`RECIPIENT ${RECIPIENT} balance ${await getBalance(RECIPIENT)}`);
+  console.log(`TRANSFER ${amount} from ${SENDER_ADDRESS} to ${RECIPIENT}`)
+  await transfer(SENDER_ADDRESS || '', RECIPIENT, amount)
+  console.log(`SENDER ${SENDER_ADDRESS} balance ${await getBalance(SENDER_ADDRESS || '')}`);
   console.log(`RECIPIENT ${RECIPIENT} balance ${await getBalance(RECIPIENT)}`);
 }
 

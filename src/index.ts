@@ -152,7 +152,7 @@ export class Server {
   }
 
   async call(contextArgs: TransactionRequest[]): Promise<any> {
-    const context = contextArgs[0]
+    const context = contextArgs[0];
     // Get the function selector
     const data = ethers.utils.hexlify(context.data as BytesLike);
     const to = ethers.utils.hexlify(context.to as BytesLike);

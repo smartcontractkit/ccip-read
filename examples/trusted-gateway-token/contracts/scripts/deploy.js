@@ -30,6 +30,7 @@ async function main() {
   await token.deployed();
 
   console.log("Token deployed to:", token.address);
+  console.log("The signer is set to:", signers[0].address);
   parsedFile.TOKEN_ADDRESS = token.address
   console.log("Saving as TOKEN_ADDRESS to:", filename);
   fs.writeFileSync(filename, envfile.stringify(parsedFile))

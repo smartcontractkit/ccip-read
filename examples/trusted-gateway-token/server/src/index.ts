@@ -7,16 +7,18 @@ const abi = JSON.parse(fs.readFileSync('../contracts/artifacts/contracts/Token.s
 
 const{
   PROVIDER_URL,
-  PRIVATE_KEY,
+  SIGNER_PRIVATE_KEY,
   ADDRESS_FILE_PATH
 } = process.env
+const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
+let signer = new ethers.Wallet(SIGNER_PRIVATE_KEY);
 console.log({
   PROVIDER_URL,
-  PRIVATE_KEY,
+  SIGNER_ADDRESS:signer.address,
   ADDRESS_FILE_PATH
 })
-const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
-let signer = new ethers.Wallet(PRIVATE_KEY);
+
+
 const data = fs.readFileSync(ADDRESS_FILE_PATH, 'utf8')
   .split("\n")
   .slice(1) // Remove the header
@@ -32,16 +34,7 @@ server.add(abi, [
   {
     calltype: 'balanceOf',
     returntype: 'balanceOfWithProof',
-    func: async (args:string[], context:any) => {
-      console.log('***', {args, context})
-      // args: [
-      //   '0x4627Bd7D658Ee1474B3f1Da1F9fF0BdE6b720FCd',
-      //   addr: '0x4627Bd7D658Ee1474B3f1Da1F9fF0BdE6b720FCd'
-      // ],
-      // context: {
-      //   to: '0x0165878A594ca255338adfa4d48449f69242Eb8F',
-      //   data: '0x70a082310000000000000000000000004627bd7d658ee1474b3f1da1f9ff0bde6b720fcd'
-      // }
+    func: async (args:string[], _context:any) => {
       const addr  = args[0]
       const balance = balances[addr] || 0
       console.log('***balanceOf:input', {addr, balance})
@@ -52,6 +45,33 @@ server.add(abi, [
       const signature = await signer.signMessage(messageHashBinary)
       console.log('***balanceOf:output', [addr, {balance, signature}])
       return [addr, {balance, signature}];
+    }
+  },
+  // function transferWithProof(address recipient, uint256 amount, BalanceProof memory proof) external returns(uint) {
+  //   function transfer(address recipient, uint256 amount) public override returns (bool) {
+  {
+    calltype: 'transfer',
+    returntype: 'transferWithProof',
+    func: async (args:string[], context:any) => {
+      // inputs: [
+      //   '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199',
+      //   BigNumber { _hex: '0x01', _isBigNumber: true },
+      //   recipient: '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199',
+      //   amount: BigNumber { _hex: '0x01', _isBigNumber: true }
+      // ]
+
+      console.log({args, context})
+      const [ recipient, amount ] = args
+      const { from } = context
+      const balance = balances[from] || 0
+      console.log('***transfer:input', {recipient, amount, from, balance})
+      let messageHash = ethers.utils.solidityKeccak256(
+        ['uint256', 'address'],[balance, from]
+      );
+      let messageHashBinary = ethers.utils.arrayify(messageHash);
+      const signature = await signer.signMessage(messageHashBinary)
+      console.log('***add:output', [recipient, amount, {balance, signature}])
+      return [recipient, amount, {balance, signature}];
     }
   }
 ], '');
