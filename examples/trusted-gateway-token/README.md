@@ -44,7 +44,7 @@ cd yarn
 npx hardhat node
 ```
 
-### 3. Create a file with address and balance
+### 3. Create a file with address and balance
 
 Use `addresses[2]` of the ethereum address from the local ethereum node
 
