@@ -68,8 +68,12 @@ contract Token is ERC20, Ownable {
 
   function balanceOfWithProof(address addr, BalanceProof memory proof) public view returns(uint) {
     uint balance = super.balanceOf(addr);
+    return balance + _balanceOfWithProof(addr, proof);
+  }
+
+  function _balanceOfWithProof(address addr, BalanceProof memory proof) public view returns(uint) {
     if(claimed[addr]){
-      return balance;
+      return 0;
     }else{
       console.log("balance %s", proof.balance );
       console.log("addr %s", addr );
@@ -81,14 +85,14 @@ contract Token is ERC20, Ownable {
       console.log("_signer %s", _signer );
       console.log("recovered %s", recovered );
       require(_signer == recovered, "Signer is not the signer of the token");
-      return balance + proof.balance;
+      return proof.balance;
     }
   }
 
   function transferWithProof(address recipient, uint256 amount, BalanceProof memory proof) external returns(bool) {
     uint l1Balance = super.balanceOf(msg.sender);
-    uint balance = balanceOfWithProof(msg.sender, proof);
-    uint diff = balance - l1Balance;
+    uint l2Balance = _balanceOfWithProof(msg.sender, proof);
+    uint diff = l2Balance - l1Balance;
     if(diff > 0){
       claimed[msg.sender] = true;
       _mint(msg.sender, diff);
