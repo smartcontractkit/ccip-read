@@ -37,13 +37,11 @@ server.add(abi, [
     func: async (args:string[], _context:any) => {
       const addr  = args[0]
       const balance = balances[addr] || 0
-      console.log('***balanceOf:input', {addr, balance})
       let messageHash = ethers.utils.solidityKeccak256(
         ['uint256', 'address'],[balance, addr]
       );
       let messageHashBinary = ethers.utils.arrayify(messageHash);
       const signature = await signer.signMessage(messageHashBinary)
-      console.log('***balanceOf:output', [addr, {balance, signature}])
       return [addr, {balance, signature}];
     }
   },
@@ -64,13 +62,11 @@ server.add(abi, [
       const [ recipient, amount ] = args
       const { from } = context
       const balance = balances[from] || 0
-      console.log('***transfer:input', {recipient, amount, from, balance})
       let messageHash = ethers.utils.solidityKeccak256(
         ['uint256', 'address'],[balance, from]
       );
       let messageHashBinary = ethers.utils.arrayify(messageHash);
       const signature = await signer.signMessage(messageHashBinary)
-      console.log('***add:output', [recipient, amount, {balance, signature}])
       return [recipient, amount, {balance, signature}];
     }
   }
