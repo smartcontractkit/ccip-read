@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "hardhat/console.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 /**
  * @title Token
  * @dev Very simple ERC20 Token example, where all tokens are pre-assigned to the creator.
@@ -13,6 +13,8 @@ import "hardhat/console.sol";
  * Based on https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v2.5.1/contracts/examples/SimpleToken.sol
  */
 contract Token is ERC20, Ownable {
+  using ECDSA for bytes32;
+
   string public url;
   address private _signer;
   mapping(address=>bool) claimed;
@@ -75,15 +77,11 @@ contract Token is ERC20, Ownable {
     if(claimed[addr]){
       return 0;
     }else{
-      console.log("balance %s", proof.balance );
-      console.log("addr %s", addr );
-      // console.log( proof.signature );
-      address recovered = recoverAddress(
-        keccak256(abi.encodePacked(proof.balance, addr)),
-        proof.signature
-      );
-      console.log("_signer %s", _signer );
-      console.log("recovered %s", recovered );
+      address recovered = keccak256(
+        abi.encodePacked("\x19Ethereum Signed Message:\n32",
+        keccak256(abi.encodePacked(proof.balance, addr))
+      )).recover(proof.signature);
+
       require(_signer == recovered, "Signer is not the signer of the token");
       return proof.balance;
     }
@@ -98,29 +96,5 @@ contract Token is ERC20, Ownable {
       _mint(msg.sender, diff);
     }
     _transfer(msg.sender, recipient, amount);
-  }
-
-  function recoverAddress(bytes32 messageHash, bytes memory signature) internal pure returns(address) {
-    (uint8 v, bytes32 r, bytes32 s) = splitSignature(signature);
-    bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
-    return ecrecover(ethSignedMessageHash, v, r, s);
-  }
-
-  /// signature methods.
-  function splitSignature(bytes memory sig)
-      internal
-      pure
-      returns (uint8 v, bytes32 r, bytes32 s)
-  {
-      require(sig.length == 65);
-      assembly {
-          // first 32 bytes, after the length prefix.
-          r := mload(add(sig, 32))
-          // second 32 bytes.
-          s := mload(add(sig, 64))
-          // final byte (first byte of the next 32 bytes).
-          v := byte(0, mload(add(sig, 96)))
-      }
-      return (v, r, s);
   }
 }
