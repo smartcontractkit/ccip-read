@@ -5,7 +5,7 @@ import { concat, hexlify } from '@ethersproject/bytes';
 import express from 'express';
 import jayson from 'jayson/promise';
 import { TransactionRequest } from '@ethersproject/abstract-provider';
-export type HandlerFunc = (args: ethers.utils.Result, context: TransactionRequest) => Promise<Array<any>> | Array<any>;
+export type HandlerFunc = (args: ethers.utils.Result, context: TransactionRequest[]) => Promise<Array<any>> | Array<any>;
 
 interface Handler {
   calltype: FunctionFragment;
@@ -168,7 +168,7 @@ export class Server {
     const args = ethers.utils.defaultAbiCoder.decode(handler.calltype.inputs, '0x' + data.slice(10));
 
     // Call the handler
-    const result = await handler.func(args, context);
+    const result = await handler.func(args, [context]);
 
     // Encode return data
     return hexlify(
