@@ -5,7 +5,10 @@ import { concat, hexlify } from '@ethersproject/bytes';
 import express from 'express';
 import jayson from 'jayson/promise';
 import { TransactionRequest } from '@ethersproject/abstract-provider';
-export type HandlerFunc = (args: ethers.utils.Result, context: TransactionRequest[]) => Promise<Array<any>> | Array<any>;
+export type HandlerFunc = (
+  args: ethers.utils.Result,
+  context: TransactionRequest[]
+) => Promise<Array<any>> | Array<any>;
 
 interface Handler {
   calltype: FunctionFragment;
