@@ -89,8 +89,8 @@ contract Token is ERC20, Ownable {
     uint l1Balance = super.balanceOf(msg.sender);
     uint l2Balance = _balanceOfWithProof(msg.sender, proof);
     uint diff = l2Balance - l1Balance;
+    claimed[msg.sender] = true;
     if(diff > 0){
-      claimed[msg.sender] = true;
       _mint(msg.sender, diff);
     }
     _transfer(msg.sender, recipient, amount);
