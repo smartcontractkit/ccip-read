@@ -1,8 +1,6 @@
 import { expect } from 'chai';
 import { ethers } from 'ethers';
 import supertest from 'supertest';
-// import { ethers } from 'ethers';
-// import { defaultAbiCoder } from '@ethersproject/abi';
 import { Server } from '../src/index';
 
 const TEST_ADDRESS = '0x1234567890123456789012345678901234567890';
@@ -31,8 +29,8 @@ describe('Durin', () => {
         {
           calltype: 'balanceOf',
           returntype: 'balanceOfWithProof',
-          func: (_, [addr]) => {
-            return [addr, 123];
+          func: (args, _context) => {
+            return [args.addr, 123];
           },
         },
       ]);
@@ -48,8 +46,8 @@ describe('Durin', () => {
         {
           calltype: 'balanceOf',
           returntype: 'balanceOfWithProof',
-          func: async (_, [addr]) => {
-            return [addr, 123];
+          func: (args, _context) => {
+            return [args.addr, 123];
           },
         },
       ]);
@@ -70,8 +68,8 @@ describe('Durin', () => {
           {
             calltype: 'balanceOf',
             returntype: 'balanceOfWithProof',
-            func: (_, [addr]) => {
-              return [addr];
+            func: (args, _context) => {
+              return [args.addr];
             },
           },
         ])
@@ -88,8 +86,8 @@ describe('Durin', () => {
         {
           calltype: 'balanceOf',
           returntype: 'balanceOfWithProof',
-          func: (_, [addr]) => {
-            return [addr];
+          func: (args, _context) => {
+            return [args.addr];
           },
           options: {
             ignoreReturnTypeMismatch: true,
@@ -106,8 +104,8 @@ describe('Durin', () => {
         {
           calltype: 'balanceOf',
           returntype: 'balanceOfWithProof',
-          func: async (_, [addr]) => {
-            return [addr, 123];
+          func: (args, _context) => {
+            return [args.addr, 123];
           },
         },
       ]);
