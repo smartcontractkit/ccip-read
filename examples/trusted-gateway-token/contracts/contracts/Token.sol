@@ -52,8 +52,6 @@ contract Token is ERC20, Ownable {
       return super.balanceOf(addr);
     }else{
       revert OffchainLookup(url,
-        // Selector does not seem to work against public function
-        // abi.encodeWithSelector(Token.balanceOfWithProof.selector, addr)
         abi.encodeWithSignature("balanceOfWithProof(address addr, BalanceProof memory proof)", addr)
       );
     }

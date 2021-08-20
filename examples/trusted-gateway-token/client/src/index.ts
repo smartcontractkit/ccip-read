@@ -29,7 +29,6 @@ console.log({
   SENDER_ADDRESS
 })
 async function getBalance(address: string) {
-  // let url, body, to, data
   try {
     return await erc20.balanceOf(address);
   } catch (e) {
@@ -69,23 +68,12 @@ async function getBalance(address: string) {
 
 async function transfer(fromAddress: string, toAddress: string, amount: number){
   try{
-    // const signer = await erc20.attach(fromAddress).getSigner()
-    const tx = await erc20.estimateGas.transfer(toAddress, amount);
-    // console.log({signer, tx})
-    console.log({fromAddress, toAddress, amount, tx})
+    await erc20.estimateGas.transfer(toAddress, amount);
   }catch(e){
-    // console.log({e})
     if(e.message.match(/OffchainLookup/)){
-      // Custom error example
-      // OffchainLookup(
-      //  "https://localhost:8080/rpc",
-      //  "0x0b09dbd30000000000000000000000008626f6940e2eb28930efb4cef49b2d1f2c9c11990000000000000000000000000000000000000000000000000000000000000001"
-      // )
       const url = "http://localhost:8080/rpc"
       const iface = new ethers.utils.Interface(abi)
-      // "0x4961ed120000000000000000000000004627bd7d658ee1474b3f1da1f9ff0bde6b720fcd"
       const inputdata = iface.encodeFunctionData("transfer", [toAddress, amount])
-      // console.log({data})
       const body = {
         jsonrpc: '2.0',
         method: 'durin_call',

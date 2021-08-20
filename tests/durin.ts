@@ -1,8 +1,6 @@
 import { expect } from 'chai';
 import { ethers } from 'ethers';
 import supertest from 'supertest';
-// import { ethers } from 'ethers';
-// import { defaultAbiCoder } from '@ethersproject/abi';
 import { Server } from '../src/index';
 
 const TEST_ADDRESS = '0x1234567890123456789012345678901234567890';
