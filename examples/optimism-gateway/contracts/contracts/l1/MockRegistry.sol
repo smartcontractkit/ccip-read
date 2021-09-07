@@ -1,4 +1,4 @@
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.4;
 pragma abicoder v2;
 
 contract MockRegistry {
@@ -8,7 +8,7 @@ contract MockRegistry {
         ownerAddress = _ownerAddress;
     }
 
-    function owner(bytes32 node) public view returns (address) {
+    function owner(bytes32 _node) public view returns (address) {
         return ownerAddress;
     }
 }
