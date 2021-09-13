@@ -1,5 +1,6 @@
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.7;
 pragma abicoder v2;
+
 
 contract MockRegistry {
     address ownerAddress;

@@ -64,9 +64,13 @@ describe("OptimismResolverStub", function() {
   });
 
   let Factory__OptimismResolverStub;
+  let Factory__OptimismResolverWrapper;
   before(async () => {
     Factory__OptimismResolverStub = await ethers.getContractFactory(
       'OptimismResolverStub'
+    );
+    Factory__OptimismResolverWrapper = await ethers.getContractFactory(
+      'OptimismResolverWrapper'
     );
   });
 
@@ -74,6 +78,8 @@ describe("OptimismResolverStub", function() {
   beforeEach(async () => {
     stub = await Factory__OptimismResolverStub.deploy(addressManager.address, GATEWAY, RESOLVER_ADDR);
     await stub.deployed();
+    wrapper = await Factory__OptimismResolverWrapper.deploy(stub.address);
+    await wrapper.deployed();
   });
 
   it("Should return the gateway and contract address from the constructor", async function() {
@@ -81,7 +87,7 @@ describe("OptimismResolverStub", function() {
     expect(await stub.gateway()).to.equal(GATEWAY);
   });
 
-  describe("addrWithProof", () => {
+  describe("wrapper", () => {
     let testAddress;
     let testNode;
     let proof;
@@ -133,8 +139,20 @@ describe("OptimismResolverStub", function() {
       );
     })
 
-    it("should verify proofs of resolution results", async function() {
-      expect(await stub.addrWithProof(testNode, proof)).to.equal(testAddress);
+    describe("addr", () => {
+      it("should throw OffchainLookup error with gateway info", async function() {
+        try{
+          await wrapper.addr(testNode)
+        }catch(e){
+          expect(e.message).to.include(GATEWAY)
+        }
+      });
+    })
+
+    describe("addrWithProof", () => {
+      it("should verify proofs of resolution results", async function() {
+        expect(await wrapper.addrWithProof(testNode, proof)).to.equal(testAddress);
+      });
     });
-  });
+  })
 });
