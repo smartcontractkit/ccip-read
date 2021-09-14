@@ -12,8 +12,9 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@eth-optimism/plugins": "0.0.20",
-    "@eth-optimism/smock": "^0.2.1-alpha.0",
+    "@eth-optimism/plugins": "1.0.0-alpha.3",
+    "@eth-optimism/smock": "1.1.10",
+    "@nomiclabs/ethereumjs-vm": "^4",
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@openzeppelin/contracts": "^3.3.0",

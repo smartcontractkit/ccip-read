@@ -13,9 +13,6 @@ async function main() {
    * L2 deploy
    ************************************/
   // Replace the l2 provider with one that points at the l2 node
-  console.log({
-    l2url:hre.network.config.l2url
-  })
   l2ethers.provider = new l2ethers.providers.JsonRpcProvider(hre.network.config.l2url);
   // Deploy L2 resolver and set addr record for test.test
   const l2accounts = await l2ethers.getSigners();

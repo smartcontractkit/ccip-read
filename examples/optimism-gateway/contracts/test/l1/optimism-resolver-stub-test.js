@@ -1,5 +1,8 @@
 const { expect } = require("chai");
 const { ethers } = require('hardhat');
+const ethers2 = require('ethers');
+const provider2 = new ethers2.providers.JsonRpcProvider('http://localhost:9545');
+
 const { Signer, ContractFactory, Contract, BigNumber } = require('ethers');
 const { keccak256 } = require('ethers/lib/utils');
 const { smockit, MockContract } = require('@eth-optimism/smock');
@@ -64,13 +67,9 @@ describe("OptimismResolverStub", function() {
   });
 
   let Factory__OptimismResolverStub;
-  let Factory__OptimismResolverWrapper;
   before(async () => {
     Factory__OptimismResolverStub = await ethers.getContractFactory(
       'OptimismResolverStub'
-    );
-    Factory__OptimismResolverWrapper = await ethers.getContractFactory(
-      'OptimismResolverWrapper'
     );
   });
 
@@ -78,8 +77,6 @@ describe("OptimismResolverStub", function() {
   beforeEach(async () => {
     stub = await Factory__OptimismResolverStub.deploy(addressManager.address, GATEWAY, RESOLVER_ADDR);
     await stub.deployed();
-    wrapper = await Factory__OptimismResolverWrapper.deploy(stub.address);
-    await wrapper.deployed();
   });
 
   it("Should return the gateway and contract address from the constructor", async function() {
@@ -87,7 +84,7 @@ describe("OptimismResolverStub", function() {
     expect(await stub.gateway()).to.equal(GATEWAY);
   });
 
-  describe("wrapper", () => {
+  describe("stub", () => {
     let testAddress;
     let testNode;
     let proof;
@@ -142,16 +139,56 @@ describe("OptimismResolverStub", function() {
     describe("addr", () => {
       it("should throw OffchainLookup error with gateway info", async function() {
         try{
-          await wrapper.addr(testNode)
+          const abi = [
+            'function addr(bytes32 node) view returns(address)',
+            // 'error OffchainLookup(bytes32,string)'
+            {
+              "inputs": [
+                {
+                  "internalType": "bytes32",
+                  "name": "prefix",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "string",
+                  "name": "url",
+                  "type": "string"
+                }
+              ],
+              "name": "OffchainLookup",
+              "type": "error"
+            }
+          ]
+          
+          const iface = new ethers2.utils.Interface(abi);
+          console.log('**1');
+          const data = iface.encodeFunctionData('addr', [testNode]);
+          console.log('**2', stub.address, data);
+          const result = await provider2.call({
+            to: stub.address,data
+          });
+          console.log('**3', result)
+
+
+          // console.log('**4', iface.decodeFunctionResult('addr', result))
+          // const contract = new ethers2.Contract(stub.address, abi, provider2);
+          // await contract.addr([testNode])
+          // stub = await Factory__OptimismResolverStub.deploy(addressManager.address, GATEWAY, RESOLVER_ADDR);
+          // await stub.deployed();
+      
+          // await stub.addr(testNode)
+
         }catch(e){
-          expect(e.message).to.include(GATEWAY)
+          console.log('***4.1', e)
+          console.log('***4.2', e.message)
+          // expect(e.message).to.include(GATEWAY)
         }
       });
     })
 
     describe("addrWithProof", () => {
       it("should verify proofs of resolution results", async function() {
-        expect(await wrapper.addrWithProof(testNode, proof)).to.equal(testAddress);
+        expect(await stub.addrWithProof(testNode, proof)).to.equal(testAddress);
       });
     });
   })

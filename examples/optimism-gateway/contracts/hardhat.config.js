@@ -2,7 +2,7 @@ require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 // require('@eth-optimism/plugins/hardhat/compiler');
 // require('@eth-optimism/plugins/hardhat/ethers');
-require('@eth-optimism/hardhat-ovm')
+// require('@eth-optimism/hardhat-ovm')
 module.exports = {
   networks: {
     integration: {
@@ -23,9 +23,14 @@ module.exports = {
   solidity: {
     compilers: [
       {
-        version: "0.7.6",
+        version: "0.8.7",
         settings: {},
       },
+      {
+        version: "0.7.6",
+        settings: {},
+      }
+
     ]
   },
 };
