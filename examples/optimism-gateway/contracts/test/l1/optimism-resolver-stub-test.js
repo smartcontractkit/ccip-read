@@ -1,7 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require('hardhat');
-const ethers2 = require('ethers');
-const provider2 = new ethers2.providers.JsonRpcProvider('http://localhost:9545');
+
 
 const { Signer, ContractFactory, Contract, BigNumber } = require('ethers');
 const { keccak256 } = require('ethers/lib/utils');
@@ -71,11 +70,17 @@ describe("OptimismResolverStub", function() {
     Factory__OptimismResolverStub = await ethers.getContractFactory(
       'OptimismResolverStub'
     );
+    Factory__OptimismVerifier = await ethers.getContractFactory(
+      'OptimismVerifier'
+    );
   });
 
-  let stub;
+  let stub, verifier;
   beforeEach(async () => {
-    stub = await Factory__OptimismResolverStub.deploy(addressManager.address, GATEWAY, RESOLVER_ADDR);
+    verifier = await Factory__OptimismVerifier.deploy(addressManager.address);
+    await verifier.deployed();
+
+    stub = await Factory__OptimismResolverStub.deploy(verifier.address, GATEWAY, RESOLVER_ADDR);
     await stub.deployed();
   });
 
@@ -139,51 +144,9 @@ describe("OptimismResolverStub", function() {
     describe("addr", () => {
       it("should throw OffchainLookup error with gateway info", async function() {
         try{
-          const abi = [
-            'function addr(bytes32 node) view returns(address)',
-            'error OffchainLookup(bytes,string)'
-            // {
-            //   "inputs": [
-            //     {
-            //       "internalType": "bytes32",
-            //       "name": "prefix",
-            //       "type": "bytes32"
-            //     },
-            //     {
-            //       "internalType": "string",
-            //       "name": "url",
-            //       "type": "string"
-            //     }
-            //   ],
-            //   "name": "OffchainLookup",
-            //   "type": "error"
-            // }
-          ]
-          
-          const iface = new ethers2.utils.Interface(abi);
-          console.log('**1');
-          const data = iface.encodeFunctionData('addr', [testNode]);
-          console.log('**2', stub.address, data);
-          const result = await stub.provider.call({
-            to: stub.address,data
-          });
-          console.log('**3', result)
-
-
-          // console.log('**4', iface.decodeFunctionResult('addr', result))
-          // const contract = new ethers.Contract(stub.address, abi, stub.provider);
-          // await contract.addr(testNode)
-          // stub = await Factory__OptimismResolverStub.deploy(addressManager.address, GATEWAY, RESOLVER_ADDR);
-          // await stub.deployed();
-      
-          // console.log(await stub.addr(testNode))
-          // console.log(await stub.addr2(testNode))
-
+          await stub.addr(testNode)
         }catch(e){
-          console.log('***4.1', e)
-          console.log('***4.2', e.message)
-          console.log('***4.3', Object.keys(e))
-          // expect(e.message).to.include(GATEWAY)
+          expect(e.message).to.include(GATEWAY)
         }
       });
     })
