@@ -1,4 +1,4 @@
-pragma solidity ^0.8.7;
+pragma solidity ^0.7.6;
 pragma abicoder v2;
 
 // import { Lib_AddressResolver } from "@eth-optimism/contracts/build/contracts/libraries/resolver/Lib_AddressResolver.sol";
@@ -27,23 +27,29 @@ contract OptimismResolverStub {
     l2resolver = _l2resolver;
   }
 
-  error OffchainLookup(bytes32 prefix, string url);
+  // error OffchainLookup(bytes prefix, string url);
 
   function addr(bytes32 node) external view returns(address) {
-    // bytes memory message = abi.encodeWithSignature("OffchainLookup(bytes,string)", node, gateway);
-    // assembly {
-      // revert(add(message,32), mload(message))
-    // }
-    revert OffchainLookup(node, gateway);
-    return address(0x0);    
+    bytes memory prefix = abi.encodeWithSelector(OptimismResolverStub.addrWithProof.selector, node);
+    bytes memory message = abi.encodeWithSignature("OffchainLookup(bytes,string)", prefix, gateway);
+    //  bytes memory message = abi.encodeWithSignature("error(string)", prefix, gateway);
+    assembly {
+      revert(add(message,32), mload(message))
+    }
   }
 
-  // function addrWithProof(bytes32 node, L2StateProof memory proof) external view returns(address) {
+  // function addr2(bytes32 node) external view returns(address) {
+  //   bytes memory prefix = abi.encodeWithSelector(OptimismResolverStub.addrWithProof.selector, node);
+  //   revert OffchainLookup(prefix, gateway);
+  // }
+
+  function addrWithProof(bytes32 node, L2StateProof memory proof) external view returns(address) {
   //   require(verifyStateRootProof(proof), "Invalid state root");
   //   bytes32 slot = keccak256(abi.encodePacked(node, uint256(1)));
   //   bytes32 value = getStorageValue(l2resolver, slot, proof);
   //   return address(uint256(value));
-  // }
+    return address(0);
+  }
 
   // function verifyStateRootProof(L2StateProof memory proof) internal view returns(bool) {
   //   iOVM_StateCommitmentChain ovmStateCommitmentChain = iOVM_StateCommitmentChain(resolve("OVM_StateCommitmentChain"));

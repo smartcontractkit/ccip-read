@@ -4,4 +4,7 @@
 docs
 **/.env
 **/artifacts
+**/artifacts-ovm
 **/cache
+**/cache-ovm
+**/.github/**

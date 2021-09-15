@@ -141,46 +141,48 @@ describe("OptimismResolverStub", function() {
         try{
           const abi = [
             'function addr(bytes32 node) view returns(address)',
-            // 'error OffchainLookup(bytes32,string)'
-            {
-              "inputs": [
-                {
-                  "internalType": "bytes32",
-                  "name": "prefix",
-                  "type": "bytes32"
-                },
-                {
-                  "internalType": "string",
-                  "name": "url",
-                  "type": "string"
-                }
-              ],
-              "name": "OffchainLookup",
-              "type": "error"
-            }
+            'error OffchainLookup(bytes,string)'
+            // {
+            //   "inputs": [
+            //     {
+            //       "internalType": "bytes32",
+            //       "name": "prefix",
+            //       "type": "bytes32"
+            //     },
+            //     {
+            //       "internalType": "string",
+            //       "name": "url",
+            //       "type": "string"
+            //     }
+            //   ],
+            //   "name": "OffchainLookup",
+            //   "type": "error"
+            // }
           ]
           
           const iface = new ethers2.utils.Interface(abi);
           console.log('**1');
           const data = iface.encodeFunctionData('addr', [testNode]);
           console.log('**2', stub.address, data);
-          const result = await provider2.call({
+          const result = await stub.provider.call({
             to: stub.address,data
           });
           console.log('**3', result)
 
 
           // console.log('**4', iface.decodeFunctionResult('addr', result))
-          // const contract = new ethers2.Contract(stub.address, abi, provider2);
-          // await contract.addr([testNode])
+          // const contract = new ethers.Contract(stub.address, abi, stub.provider);
+          // await contract.addr(testNode)
           // stub = await Factory__OptimismResolverStub.deploy(addressManager.address, GATEWAY, RESOLVER_ADDR);
           // await stub.deployed();
       
-          // await stub.addr(testNode)
+          // console.log(await stub.addr(testNode))
+          // console.log(await stub.addr2(testNode))
 
         }catch(e){
           console.log('***4.1', e)
           console.log('***4.2', e.message)
+          console.log('***4.3', Object.keys(e))
           // expect(e.message).to.include(GATEWAY)
         }
       });
