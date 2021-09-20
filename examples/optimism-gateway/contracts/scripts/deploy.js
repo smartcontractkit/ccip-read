@@ -14,6 +14,8 @@ async function main() {
    * L1 deploy
    ************************************/
   const accounts = await ethers.getSigners();
+  const balance = await accounts[0].getBalance()
+  console.log({balance})
 
   // Deploy the ENS registry
   const ENS = await ethers.getContractFactory("ENSRegistry");
@@ -26,12 +28,19 @@ async function main() {
   await ens.setSubnodeOwner(namehash.hash('test'), ethers.utils.keccak256(ethers.utils.toUtf8Bytes('test')), accounts[0].address);
 
   // Deploy the resolver stub
+  const OptimismVerifier = await ethers.getContractFactory("OptimismVerifier");
+  const verifier = await OptimismVerifier.deploy(OVM_ADDRESS_MANAGER);
+  await verifier.deployed();
+
   const OptimismResolverStub = await ethers.getContractFactory("OptimismResolverStub");
-  const stub = await OptimismResolverStub.deploy(OVM_ADDRESS_MANAGER, "http://localhost:8081/query", RESOLVER_ADDRESS);
+  const stub = await OptimismResolverStub.deploy(verifier.address, "http://localhost:8081/query", RESOLVER_ADDRESS);
   await stub.deployed();
   // Set the stub as the resolver for test.test
   await ens.setResolver(namehash.hash('test.test'), stub.address);
   console.log(`OptimismResolverStub deployed at ${stub.address}`);
+  parsedFile.RESOLVER_STUB_ADDRESS = stub.address
+  fs.writeFileSync('./.env', envfile.stringify(parsedFile))
+
 }
 
 // We recommend this pattern to be able to use async/await everywhere

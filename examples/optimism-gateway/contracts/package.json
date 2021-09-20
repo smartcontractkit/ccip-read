@@ -7,7 +7,7 @@
     "test": "hardhat test",
     "deploy": "yarn deploy:l2 && yarn deploy:l1",
     "deploy:l1": "npx hardhat --network integration run scripts/deploy.js",
-    "deploy:l2": "npx hardhat --network optimistic run scripts/l2deploy.js"
+    "deploy:l2": "IS_OPTIMISM=true npx hardhat --network optimistic run scripts/l2deploy.js"
   },
   "author": "",
   "license": "ISC",
