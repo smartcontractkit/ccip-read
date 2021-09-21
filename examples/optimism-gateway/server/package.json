@@ -12,6 +12,8 @@
   },
   "scripts": {
     "start": "yarn build && node dist/index.js",
+    "copyabi": "cat ../contracts/artifacts/contracts/l1/OptimismResolverStub.sol/OptimismResolverStub.json  | jq '.abi' > ./abis/OptimismResolverStub.json",
+    "typechain": "typechain --target ethers-v5 --outDir src/contracts ./abis/**/*.json",
     "build": "tsdx build",
     "test": "tsdx test",
     "lint": "tsdx lint",
@@ -50,12 +52,23 @@
     "size-limit": "^5.0.3",
     "tsdx": "^0.14.1",
     "tslib": "^2.3.1",
-    "typescript": "^4.3.5"
+    "typescript": "^4.3.5",
+    "@typechain/ethers-v5": "^6.0.2",
+    "@types/cors": "^2.8.10",
+    "@types/express": "^4.17.11",
+    "@types/node": "^14.14.33",
+    "typechain": "^4.0.3"
   },
   "dependencies": {
     "@ensdomains/durin": "https://github.com/ensdomains/durin",
     "dotenv": "^10.0.0",
     "ethers": "^5.4.4",
-    "ts-node": "^10.2.0"
+    "ts-node": "^10.2.0",
+    "@eth-optimism/contracts": "^0.4.12",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "merkle-tree-solidity": "^1.0.8",
+    "merkletreejs": "^0.2.13",
+    "node": "^15.0.1"
   }
 }

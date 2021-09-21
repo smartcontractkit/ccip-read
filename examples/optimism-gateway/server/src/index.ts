@@ -1,66 +1,122 @@
+import { ethers, BigNumber } from 'ethers';
+import { MerkleTree } from 'merkletreejs'
+import { OptimismResolverStub__factory } from './contracts/factories/OptimismResolverStub__factory';
+import { loadContract, loadContractFromManager } from './ovm-contracts';
+import { RLP } from 'ethers/lib/utils';
 const durin = require('@ensdomains/durin');
-const ethers = require('ethers');
+const abi = require('../abis/OptimismResolverStub.json')
+// Instantiate the ethers provider
+const L1_PROVIDER_URL = "http://localhost:9545/";
+const l1_provider = new ethers.providers.JsonRpcProvider(L1_PROVIDER_URL);
+
+const L2_PROVIDER_URL = "http://localhost:8545/";
+const l2_provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
+
+const ADDRESS_MANAGER_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
+
+// Instantiate the manager
+const ovmAddressManager = loadContract('Lib_AddressManager', ADDRESS_MANAGER_ADDRESS, l1_provider);
+
+interface StateRootBatchHeader {
+    batchIndex: BigNumber
+    batchRoot: string
+    batchSize: BigNumber
+    prevTotalElements: BigNumber
+    extraData: string
+}
+
+async function getLatestStateBatchHeader(): Promise<{batch: StateRootBatchHeader, stateRoots: string[]}> {
+    // Instantiate the state commitment chain
+    const ovmStateCommitmentChain = await loadContractFromManager('OVM_StateCommitmentChain', ovmAddressManager, l1_provider);
+    for(let endBlock = await l1_provider.getBlockNumber(); endBlock > 0; endBlock = Math.max(endBlock - 100, 0)) {
+        const startBlock = Math.max(endBlock - 100, 1);
+        const events: ethers.Event[] = await ovmStateCommitmentChain.queryFilter(
+            ovmStateCommitmentChain.filters.StateBatchAppended(), startBlock, endBlock);
+        if(events.length > 0) {
+            const event = events[events.length - 1];
+            const tx = await l1_provider.getTransaction(event.transactionHash);
+            const [ stateRoots ] = ovmStateCommitmentChain.interface.decodeFunctionData('appendStateBatch', tx.data);
+            return {
+                batch: {
+                    batchIndex: event.args?._batchIndex,
+                    batchRoot: event.args?._batchRoot,
+                    batchSize: event.args?._batchSize,
+                    prevTotalElements: event.args?._prevTotalElements,
+                    extraData: event.args?._extraData,
+                },
+                stateRoots,
+            }
+        }
+    }
+    throw Error("No state root batches found");
+}
+
 const server = new durin.Server();
-const fs = require('fs');
-require('dotenv').config({ path: '../.env' });
-const abi = JSON.parse(
-  fs.readFileSync(
-    '../contracts/artifacts/contracts/Token.sol/Token.json',
-    'utf8'
-  )
-).abi;
-
-const { SIGNER_PRIVATE_KEY, ADDRESS_FILE_PATH } = process.env;
-let signer = new ethers.Wallet(SIGNER_PRIVATE_KEY);
-
-const data = fs
-  .readFileSync(ADDRESS_FILE_PATH, 'utf8')
-  .split('\n')
-  .slice(1) // Remove the header
-  .map((d: string) => d.split(','))
-  .filter((r: string[]) => r[0] !== '');
-
-const balances = data.reduce((map: any, obj: any) => {
-  const [key, val] = obj;
-  map[key] = parseInt(val);
-  return map;
-}, {});
 server.add(
   abi,
   [
     {
-      calltype: 'balanceOf',
-      returntype: 'balanceOfWithProof',
+      // addr(bytes32 node)
+      calltype: 'addr',
+      returntype: 'addrWithProof',
       func: async (args: string[], _context: any) => {
-        const addr = args[0];
-        const balance = balances[addr] || 0;
-        let messageHash = ethers.utils.solidityKeccak256(
-          ['uint256', 'address'],
-          [balance, addr]
-        );
-        let messageHashBinary = ethers.utils.arrayify(messageHash);
-        const signature = await signer.signMessage(messageHashBinary);
-        return [addr, { balance, signature }];
-      },
-    },
-    {
-      calltype: 'transfer',
-      returntype: 'transferWithProof',
-      func: async (args: string[], context: any) => {
-        const [recipient, amount] = args;
-        const { from } = context;
-        const balance = balances[from] || 0;
-        let messageHash = ethers.utils.solidityKeccak256(
-          ['uint256', 'address'],
-          [balance, from]
-        );
-        let messageHashBinary = ethers.utils.arrayify(messageHash);
-        const signature = await signer.signMessage(messageHashBinary);
-        return [recipient, amount, { balance, signature }];
-      },
-    },
+        const node = args[0];
+        const address = _context[0]['to']
+        const contract = OptimismResolverStub__factory.connect(address, l1_provider);
+        const stateBatchHeader = await getLatestStateBatchHeader();
+        // The l2 block number we'll use is the last one in the state batch
+        const l2BlockNumber = stateBatchHeader.batch.prevTotalElements.add(stateBatchHeader.batch.batchSize);
+        // Construct a merkle proof for the state root we need
+        const elements = []
+        for (
+          let i = 0;
+          i < Math.pow(2, Math.ceil(Math.log2(stateBatchHeader.stateRoots.length)));
+          i++
+        ) {
+          if (i < stateBatchHeader.stateRoots.length) {
+            elements.push(stateBatchHeader.stateRoots[i])
+          } else {
+            elements.push(ethers.utils.keccak256('0x' + '00'.repeat(32)))
+          }
+        }
+        const hash = (el: Buffer | string): Buffer => {
+          return Buffer.from(ethers.utils.keccak256(el).slice(2), 'hex')
+        }
+        const leaves = elements.map((element) => {
+          return Buffer.from(element.slice(2), 'hex')
+        })
+        const index = elements.length - 1;
+        const tree = new MerkleTree(leaves, hash)
+        const treeProof = tree.getProof(leaves[index], index).map((element) => {
+          return element.data
+        });
+        // Get the address for the L2 resolver contract, and the slot that contains the data we want
+        const l2ResolverAddress = await contract.l2resolver();
+        const addrSlot = ethers.utils.keccak256(node + '00'.repeat(31) + '01');
+        // Get a proof of the contents of that slot at the required L2 block
+        const proof = await l2_provider.send('eth_getProof', [
+          l2ResolverAddress,
+          [addrSlot],
+          '0x' + BigNumber.from(l2BlockNumber).toHexString().slice(2).replace(/^0+/, '')
+        ]);
+
+        return [
+            node,
+            {
+                stateRoot: stateBatchHeader.stateRoots[index],
+                stateRootBatchHeader: stateBatchHeader.batch,
+                stateRootProof: {
+                    index,
+                    siblings: treeProof,
+                },
+                stateTrieWitness: RLP.encode(proof.accountProof),
+                storageTrieWitness: RLP.encode(proof.storageProof[0].proof),
+            }
+        ];
+      }
+    }
   ],
   ''
 );
 const app = server.makeApp('/rpc');
-app.listen(8080);
+app.listen(8081);

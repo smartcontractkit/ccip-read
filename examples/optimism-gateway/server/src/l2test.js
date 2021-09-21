@@ -16,9 +16,7 @@ const loadContractFromManager = async (
   Lib_AddressManager,
   provider
 ) => {
-  console.log('***loadContractFromManager1', name)
   const address = await Lib_AddressManager.getAddress(name)
-  console.log('***loadContractFromManager2', address)
   if (address === ZERO_ADDRESS) {
     throw new Error(
       `Lib_AddressManager does not have a record for a contract named: ${name}`
