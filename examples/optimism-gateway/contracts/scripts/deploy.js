@@ -4,7 +4,8 @@ const namehash = require('eth-ens-namehash');
 const fs = require('fs')
 const envfile = require('envfile')
 const parsedFile = envfile.parse(fs.readFileSync('./.env'))
-const OVM_ADDRESS_MANAGER = "0x3e4CFaa8730092552d9425575E49bB542e329981";
+// const OVM_ADDRESS_MANAGER = "0x3e4CFaa8730092552d9425575E49bB542e329981";
+const OVM_ADDRESS_MANAGER = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 const TEST_NODE = namehash.hash('test.test');
 
 async function main() {
