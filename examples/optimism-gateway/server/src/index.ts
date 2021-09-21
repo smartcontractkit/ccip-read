@@ -32,6 +32,7 @@ async function getLatestStateBatchHeader(): Promise<{batch: StateRootBatchHeader
         const startBlock = Math.max(endBlock - 100, 1);
         const events: ethers.Event[] = await ovmStateCommitmentChain.queryFilter(
             ovmStateCommitmentChain.filters.StateBatchAppended(), startBlock, endBlock);
+        console.log('Number of events:', events.length)
         if(events.length > 0) {
             const event = events[events.length - 1];
             const tx = await l1_provider.getTransaction(event.transactionHash);

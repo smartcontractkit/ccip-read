@@ -13,6 +13,7 @@
   "scripts": {
     "start": "yarn build && node dist/index.js",
     "copyabi": "cat ../contracts/artifacts/contracts/l1/OptimismResolverStub.sol/OptimismResolverStub.json  | jq '.abi' > ./abis/OptimismResolverStub.json",
+    "copyabi:l2": "cat ../contracts/artifacts-ovm/contracts/l2/OptimismResolver.sol/OptimismResolver.json  | jq '.abi' > ./abis/OptimismResolver.json",
     "typechain": "typechain --target ethers-v5 --outDir src/contracts ./abis/**/*.json",
     "build": "tsdx build",
     "test": "tsdx test",
