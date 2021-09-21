@@ -15,7 +15,11 @@ async function main() {
   const accounts = await ethers.getSigners();
   const resolver = await hre.ethers.getContractAt('OptimismResolver', RESOLVER_ADDRESS);
   console.log('block', await l1_provider.getBlockNumber())
-  await (await resolver.functions.setAddr(TEST_NODE, accounts[2].address)).wait();
+  for (let index = 0; index < 200; index++) {
+    console.log(index)
+    await (await resolver.functions.setAddr(TEST_NODE, accounts[2].address)).wait();
+  }
+
   console.log('Address set');
   console.log(await resolver.functions.addr(TEST_NODE))
   console.log('block', await l1_provider.getBlockNumber())

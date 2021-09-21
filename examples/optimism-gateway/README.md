@@ -7,6 +7,38 @@ This example is a port of https://github.com/ensdomains/l2gateway-demo
 
 ## The flow
 
+### When A user update smart contract on l2
+
+- l1 state root gets updated
+- `OVM_StateCommitmentChain` on l1 emit events
+
+### When A user query l2 data via Durin
+
+- The client library first calls `resolver.addr()` which returns Durin gateway url
+- Durin gets the latest state batch header by `StateBatchAppended` events on listening to OVM_StateCommitmentChain contract.
+- Durin constructs MerkleTree based on the state roots
+- Durin calls l2 `eth_getProof` to fetch the first storage slot of the `OptimismResolver` contract where `mapping(bytes32=>address) addresses` is stored
+- Durin returns the `stateBatchHeader`
+
+```js
+{
+  stateBatchHeader: {
+    batch: {
+      batchIndex: [BigNumber],
+      batchRoot: '0x2fe1dc132260ee7b45a468d9f84e1d1cecf02dba8e16e0646b59c2b11b5f4fa9',
+      batchSize: [BigNumber],
+      prevTotalElements: [BigNumber],
+      extraData: '0x00000000000000000000000000000000000000000000000000000000614a3b3200000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c8'
+    },
+    stateRoots: [
+      '0x2fe1dc132260ee7b45a468d9f84e1d1cecf02dba8e16e0646b59c2b11b5f4fa9'
+    ]
+  }
+}
+```
+
+- Once the client library receives the response, calls `resolver.addrWithProof` with the response
+
 ## How to set up
 
 ### 1. Setup optimism environment
@@ -101,4 +133,8 @@ Ask durin again
 ## TODO
 
 - Extract gateway url from exception rather than hardcoding = Pending on [hardhat to fix the bug](https://github.com/nomiclabs/hardhat/issues/1882)
-- Allow users to set 
+
+
+## Open questions
+
+- What happens 

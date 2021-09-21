@@ -29,10 +29,10 @@ async function getLatestStateBatchHeader(): Promise<{batch: StateRootBatchHeader
     // Instantiate the state commitment chain
     const ovmStateCommitmentChain = await loadContractFromManager('OVM_StateCommitmentChain', ovmAddressManager, l1_provider);
     for(let endBlock = await l1_provider.getBlockNumber(); endBlock > 0; endBlock = Math.max(endBlock - 100, 0)) {
-        const startBlock = Math.max(endBlock - 100, 1);
+        const startBlock = Math.max(endBlock - 100 , 1);
         const events: ethers.Event[] = await ovmStateCommitmentChain.queryFilter(
             ovmStateCommitmentChain.filters.StateBatchAppended(), startBlock, endBlock);
-        console.log('Number of events:', events.length)
+        console.log(`${events.length} events between ${startBlock} - ${endBlock}`)
         if(events.length > 0) {
             const event = events[events.length - 1];
             const tx = await l1_provider.getTransaction(event.transactionHash);
@@ -65,6 +65,8 @@ server.add(
         const address = _context[0]['to']
         const contract = OptimismResolverStub__factory.connect(address, l1_provider);
         const stateBatchHeader = await getLatestStateBatchHeader();
+        console.log({stateBatchHeader})
+
         // The l2 block number we'll use is the last one in the state batch
         const l2BlockNumber = stateBatchHeader.batch.prevTotalElements.add(stateBatchHeader.batch.batchSize);
         // Construct a merkle proof for the state root we need
@@ -95,10 +97,11 @@ server.add(
         const l2ResolverAddress = await contract.l2resolver();
         const addrSlot = ethers.utils.keccak256(node + '00'.repeat(31) + '01');
         // Get a proof of the contents of that slot at the required L2 block
+        const tag = '0x' + BigNumber.from(l2BlockNumber).toHexString().slice(2).replace(/^0+/, '')
         const proof = await l2_provider.send('eth_getProof', [
           l2ResolverAddress,
           [addrSlot],
-          '0x' + BigNumber.from(l2BlockNumber).toHexString().slice(2).replace(/^0+/, '')
+          tag
         ]);
 
         return [

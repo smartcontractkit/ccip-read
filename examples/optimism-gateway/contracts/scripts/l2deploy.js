@@ -19,8 +19,11 @@ async function main() {
   const resolver = await OptimismResolver.deploy({gasPrice: 15000000, gasLimit:50000000});
   await resolver.deployed();
   console.log(`OptimismResolver deployed to ${resolver.address}`);
-  await (await resolver.functions.setAddr(TEST_NODE, accounts[0].address)).wait();
   await (await resolver.functions.setAddr(TEST2_NODE, accounts[1].address)).wait();
+  for (let index = 0; index < 20; index++) {
+    console.log(index)
+    await (await resolver.functions.setAddr(TEST_NODE, accounts[0].address)).wait();    
+  }
   parsedFile.RESOLVER_ADDRESS = resolver.address
   fs.writeFileSync('./.env', envfile.stringify(parsedFile))
   console.log('Address set');
