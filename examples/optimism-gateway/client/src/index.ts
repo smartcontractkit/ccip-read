@@ -1,6 +1,7 @@
 const ethers = require('ethers');
 const namehash = require('eth-ens-namehash');
 const TEST_NODE = namehash.hash('test.test');
+const TEST2_NODE = namehash.hash('test2.test');
 const nodeFetch = require('node-fetch');
 const TEST_ADDRESS = "0x0000000000000000000000000000000000000001";
 
@@ -52,7 +53,7 @@ async function addr(node: string) {
       // Hardcode the url until https://github.com/nomiclabs/hardhat/issues/1882 is solved
       const url = 'http://localhost:8081/rpc';
       const iface = new ethers.utils.Interface(abi);
-      const data = iface.encodeFunctionData('addr', [TEST_NODE]);
+      const data = iface.encodeFunctionData('addr', [node]);
       const body = {
         jsonrpc: '2.0',
         method: 'durin_call',
@@ -82,10 +83,12 @@ async function addr(node: string) {
 }
 
 async function main() {
-  console.log('Ask durin');
+  console.log('Ask durin for test.test');
   console.log(await addr(TEST_NODE));
+  console.log('Ask durin for test2.test');
+  console.log(await addr(TEST2_NODE));
   const l2resolver = new ethers.Contract(RESOLVER_ADDRESS, abi2, createL2Wallet());
-  console.log('Setting to zero address to l2');
+  console.log('Update test.test on l2');
   await (await l2resolver.setAddr(TEST_NODE, TEST_ADDRESS)).wait();
   console.log('Set new value to l2', await l2resolver.addr(TEST_NODE));
   console.log('Wait 10 sec');
