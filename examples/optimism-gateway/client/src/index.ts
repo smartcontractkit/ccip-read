@@ -2,7 +2,7 @@ const ethers = require('ethers');
 const namehash = require('eth-ens-namehash');
 const TEST_NODE = namehash.hash('test.test');
 const nodeFetch = require('node-fetch');
-const ZERO_ADDRESS = "0x" + "00".repeat(20);
+const TEST_ADDRESS = "0x0000000000000000000000000000000000000001";
 
 require('dotenv').config({ path: '../contracts/.env' });
 const fs = require('fs');
@@ -86,8 +86,8 @@ async function main() {
   console.log(await addr(TEST_NODE));
   const l2resolver = new ethers.Contract(RESOLVER_ADDRESS, abi2, createL2Wallet());
   console.log('Setting to zero address to l2');
-  await (await l2resolver.setAddr(TEST_NODE, ZERO_ADDRESS)).wait();
-  console.log('Set to l2', await l2resolver.addr(TEST_NODE));
+  await (await l2resolver.setAddr(TEST_NODE, TEST_ADDRESS)).wait();
+  console.log('Set new value to l2', await l2resolver.addr(TEST_NODE));
   console.log('Wait 10 sec');
   await sleep(10000)
   console.log('Ask durin again');
