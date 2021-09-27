@@ -18,6 +18,9 @@ module.exports = {
     sources
   },
   networks: {
+    hardhat:{
+      throwOnCallFailures:false
+    },
     local: {
       url: "http://localhost:9545/",
       gasPrice: 15000000

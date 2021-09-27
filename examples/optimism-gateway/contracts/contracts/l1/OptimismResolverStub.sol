@@ -13,11 +13,15 @@ contract OptimismResolverStub {
     l2resolver = _l2resolver;
   }
 
-  error OffchainLookup(bytes prefix, string url);
+  // error OffchainLookup(bytes prefix, string url);
 
   function addr(bytes32 node) external view returns(address) {
     bytes memory prefix = abi.encodeWithSelector(OptimismResolverStub.addrWithProof.selector, node);
-    revert OffchainLookup(prefix, gateway);
+  //    revert OffchainLookup(prefix, gateway);
+    bytes memory message = abi.encodeWithSignature("OffchainLookup(bytes,string)", prefix, gateway);
+    assembly {
+      revert(add(message,32), mload(message))
+    }
   }
 
   function addrWithProof(bytes32 node, OptimismVerifierI.L2StateProof memory proof) external view returns(address) {

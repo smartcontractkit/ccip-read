@@ -144,8 +144,15 @@ describe("OptimismResolverStub", function() {
     describe("addr", () => {
       it("should throw OffchainLookup error with gateway info", async function() {
         try{
-          await stub.addr(testNode)
+          const abi = [
+            'function addr(bytes32 node) view returns(address)',
+            'error OffchainLookup(bytes,string)'
+          ]
+          // Testing to make sure it works without hardhat
+          const contract = new ethers.Contract(stub.address, abi, stub.provider);
+          await contract.addr(testNode);
         }catch(e){
+          console.log({e})
           expect(e.message).to.include(GATEWAY)
         }
       });
