@@ -29,6 +29,7 @@ async function getLatestStateBatchHeader(): Promise<{batch: StateRootBatchHeader
     // Instantiate the state commitment chain
     const ovmStateCommitmentChain = await loadContractFromManager('OVM_StateCommitmentChain', ovmAddressManager, l1_provider);
     for(let endBlock = await l1_provider.getBlockNumber(); endBlock > 0; endBlock = Math.max(endBlock - 100, 0)) {
+        // TODO: Replace with Optimism's own indexer
         const startBlock = Math.max(endBlock - 100 , 1);
         const events: ethers.Event[] = await ovmStateCommitmentChain.queryFilter(
             ovmStateCommitmentChain.filters.StateBatchAppended(), startBlock, endBlock);

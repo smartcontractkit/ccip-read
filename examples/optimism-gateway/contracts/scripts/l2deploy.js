@@ -20,7 +20,7 @@ async function main() {
   await resolver.deployed();
   console.log(`OptimismResolver deployed to ${resolver.address}`);
   await (await resolver.functions.setAddr(TEST2_NODE, accounts[1].address)).wait();
-  for (let index = 0; index < 20; index++) {
+  for (let index = 0; index < 2; index++) {
     console.log(index)
     await (await resolver.functions.setAddr(TEST_NODE, accounts[0].address)).wait();    
   }

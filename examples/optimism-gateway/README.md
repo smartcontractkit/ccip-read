@@ -7,18 +7,18 @@ This example is a port of https://github.com/ensdomains/l2gateway-demo
 
 ## The flow
 
-### When A user update smart contract on l2
+### When A user updates smart contract on l2
 
 - l1 state root gets updated
-- `OVM_StateCommitmentChain` on l1 emit events
+- `OVM_StateCommitmentChain` on l1 emits events
 
 ### When A user query l2 data via Durin
 
-- The client library first calls `resolver.addr()` which returns Durin gateway url
-- Durin gets the latest state batch header by `StateBatchAppended` events on listening to OVM_StateCommitmentChain contract.
+- The client library first calls `resolver.addr()` which throws an error with Durin gateway url
+- Durin extracts the latest state batch header from `OVM_StateCommitmentChain.StateBatchAppended`event.
 - Durin constructs MerkleTree based on the state roots
 - Durin calls l2 `eth_getProof` to fetch the first storage slot of the `OptimismResolver` contract where `mapping(bytes32=>address) addresses` is stored
-- Durin returns the `stateBatchHeader`
+- Durin returns the `stateBatchHeader` in the follwoing format
 
 ```js
 {
@@ -37,7 +37,8 @@ This example is a port of https://github.com/ensdomains/l2gateway-demo
 }
 ```
 
-- Once the client library receives the response, calls `resolver.addrWithProof` with the response
+- Once the client library receives the response, calls l1 `resolver.addrWithProof` with the response
+- `addrWithProof` calls `verifier.getVerifiedValue(l2resolver, slot, proof)` and returns the resolver address
 
 ## How to set up
 

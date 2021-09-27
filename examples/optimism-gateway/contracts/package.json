@@ -5,10 +5,13 @@
   "main": "index.js",
   "scripts": {
     "test": "hardhat test",
-    "deploy": "yarn deploy:l2 && yarn deploy:l1",
-    "deploy:l1": "npx hardhat --network integration run scripts/deploy.js",
-    "test:l1": "npx hardhat --network integration run scripts/test.js",
-    "deploy:l2": "IS_OPTIMISM=true npx hardhat --network optimistic run scripts/l2deploy.js",
+    "local:deploy": "yarn local:deploy:l2 && yarn local:deploy:l1",
+    "local:deploy:l1": "npx hardhat --network local run scripts/deploy.js",
+    "local:deploy:l2": "IS_OPTIMISM=true npx hardhat --network optimisticlocal run scripts/l2deploy.js",
+    "kovan:deploy": "yarn kovan:deploy:l2 && yarn kovan:deploy:l1",
+    "kovan:deploy:l1": "npx hardhat --network kovan run scripts/deploy.js",
+    "kovan:deploy:l2": "IS_OPTIMISM=true npx hardhat --network optimistickovan run scripts/l2deploy.js",
+    "test:l1": "npx hardhat --network rinkeby run scripts/test.js",
     "test:l2": "IS_OPTIMISM=true npx hardhat --network optimistic run scripts/l2test.js"
   },
   "author": "",
