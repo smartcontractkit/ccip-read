@@ -1,8 +1,12 @@
+const fs = require('fs')
+const envfile = require('envfile')
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require('@eth-optimism/hardhat-ovm')
+const parsedFile = envfile.parse(fs.readFileSync('./.env'))
 const sources = process.env.IS_OPTIMISM ? "./contracts/l2" : "./contracts/l1"
-const MNEMONIC = process.env.MNEMONIC || 'test test test test test test test test test test test junk'
+const MNEMONIC = parsedFile.MNEMONIC || 'test test test test test test test test test test test junk'
+console.log({MNEMONIC})
 const INFURA_API_KEY = process.env.INFURA_API_KEY
 module.exports = {
   paths: {
