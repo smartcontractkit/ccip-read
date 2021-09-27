@@ -9,7 +9,7 @@ const OVM_ADDRESS_MANAGER = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 const TEST_NODE = namehash.hash('test.test');
 
 async function main() {
-  const { RESOLVER_ADDRESS, REGISTRY_ADDRESS } = parsedFile
+  const { RESOLVER_ADDRESS, REGISTRY_ADDRESS, VERIFIER_ADDRESS, RESOLVER_STUB_ADDRESS } = parsedFile
   console.log({ RESOLVER_ADDRESS })
   /************************************
    * L1 deploy
@@ -19,7 +19,7 @@ async function main() {
   console.log({balance, address:accounts[0].address})
 
   // Deploy the ENS registry
-  let ens
+  let ens, verifier, stub
   const ENS = await ethers.getContractFactory("ENSRegistry");
   if(!REGISTRY_ADDRESS){
     ens = await ENS.deploy();
@@ -29,29 +29,39 @@ async function main() {
     await ens.owner(namehash.hash('test'))
     await ens.setSubnodeOwner(namehash.hash('test'), ethers.utils.keccak256(ethers.utils.toUtf8Bytes('test')), accounts[0].address);
     await ens.owner(namehash.hash('test.test'))
+    parsedFile.REGISTRY_ADDRESS = ens.address
+    fs.writeFileSync('./.env', envfile.stringify(parsedFile))
+    console.log(`ENS registry deployed at ${ens.address}`);  
   }else{
     ens = await ENS.attach(REGISTRY_ADDRESS);
     console.log({ REGISTRY_ADDRESS })
   }
-  parsedFile.REGISTRY_ADDRESS = ens.address
-  fs.writeFileSync('./.env', envfile.stringify(parsedFile))
-  console.log(`ENS registry deployed at ${ens.address}`);
 
-  // // Deploy the resolver stub
-  // const OptimismVerifier = await ethers.getContractFactory("OptimismVerifier");
-  // const verifier = await OptimismVerifier.deploy(OVM_ADDRESS_MANAGER);
-  // await verifier.deployed();
+  // Deploy the resolver stub
+  const OptimismVerifier = await ethers.getContractFactory("OptimismVerifier");
+  if(!VERIFIER_ADDRESS){
+    verifier = await OptimismVerifier.deploy(OVM_ADDRESS_MANAGER);
+    await verifier.deployed();
+    parsedFile.VERIFIER_ADDRESS = verifier.address
+    fs.writeFileSync('./.env', envfile.stringify(parsedFile))
+    console.log(`VERIFIER_ADDRESS deployed at ${verifier.address}`);
+  }else{
+    verifier = await OptimismVerifier.attach(VERIFIER_ADDRESS)
+    console.log({VERIFIER_ADDRESS})
+  }
 
-
-  // const OptimismResolverStub = await ethers.getContractFactory("OptimismResolverStub");
-  // const stub = await OptimismResolverStub.deploy(verifier.address, "http://localhost:8081/query", RESOLVER_ADDRESS);
-  // await stub.deployed();
-  // // Set the stub as the resolver for test.test
-  // await ens.setResolver(namehash.hash('test.test'), stub.address);
-  // console.log(`OptimismResolverStub deployed at ${stub.address}`);
-  // parsedFile.RESOLVER_STUB_ADDRESS = stub.address
-  // fs.writeFileSync('./.env', envfile.stringify(parsedFile))
-
+  const OptimismResolverStub = await ethers.getContractFactory("OptimismResolverStub");
+  if(!RESOLVER_STUB_ADDRESS){
+    const stub = await OptimismResolverStub.deploy(verifier.address, "http://localhost:8081/query", RESOLVER_ADDRESS);
+    await stub.deployed();
+    // Set the stub as the resolver for test.test
+    await ens.setResolver(namehash.hash('test.test'), stub.address);
+    console.log(`OptimismResolverStub deployed at ${stub.address}`);
+    parsedFile.RESOLVER_STUB_ADDRESS = stub.address
+    fs.writeFileSync('./.env', envfile.stringify(parsedFile))  
+  }else{
+    console.log({RESOLVER_STUB_ADDRESS})
+  }
 }
 
 // We recommend this pattern to be able to use async/await everywhere
