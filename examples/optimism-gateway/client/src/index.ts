@@ -21,10 +21,18 @@ const abi2 = JSON.parse(
 );
 const {
   RESOLVER_ADDRESS,
-  RESOLVER_STUB_ADDRESS
+  RESOLVER_STUB_ADDRESS,
+  NETWORK,
+  INFURA_API_KEY
 } = process.env;
-const PROVIDER_URL = 'http://localhost:9545'
+let PROVIDER_URL
+if(NETWORK === 'kovan'){
+  PROVIDER_URL = `https://kovan.infura.io/v3/${INFURA_API_KEY}`
+}else{
+  PROVIDER_URL = 'http://localhost:9545'
+}
 const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
+
 const L2_PROVIDER_URL = 'http://localhost:8545'
 const l2provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
 const resolver = new ethers.Contract(RESOLVER_STUB_ADDRESS, abi, provider);
@@ -32,6 +40,7 @@ const resolver = new ethers.Contract(RESOLVER_STUB_ADDRESS, abi, provider);
 console.log({
   RESOLVER_STUB_ADDRESS
 })
+console.log(JSON.stringify(abi))
 
 function createL2Wallet() {
   const mnemonic = "test test test test test test test test test test test junk";
@@ -46,9 +55,13 @@ function sleep(ms:number) {
 }
 async function addr(node: string) {
   try {
+    console.log({node})
     return await resolver.addr(node);
   } catch (e) {
     console.log(`*** resolver.addr error: ${e.message}`);
+    console.log(Object.keys(e));
+    const {reason, code, error, data} = e
+    console.log({reason, code, error, data});
     if (true) {
       // Hardcode the url until https://github.com/nomiclabs/hardhat/issues/1882 is solved
       const url = 'http://localhost:8081/rpc';
@@ -85,16 +98,16 @@ async function addr(node: string) {
 async function main() {
   console.log('Ask durin for test.test');
   console.log(await addr(TEST_NODE));
-  console.log('Ask durin for test2.test');
-  console.log(await addr(TEST2_NODE));
-  const l2resolver = new ethers.Contract(RESOLVER_ADDRESS, abi2, createL2Wallet());
-  console.log('Update test.test on l2');
-  await (await l2resolver.setAddr(TEST_NODE, TEST_ADDRESS)).wait();
-  console.log('Set new value to l2', await l2resolver.addr(TEST_NODE));
-  console.log('Wait 10 sec');
-  await sleep(10000)
-  console.log('Ask durin again');
-  console.log(await addr(TEST_NODE));
+  // console.log('Ask durin for test2.test');
+  // console.log(await addr(TEST2_NODE));
+  // const l2resolver = new ethers.Contract(RESOLVER_ADDRESS, abi2, createL2Wallet());
+  // console.log('Update test.test on l2');
+  // await (await l2resolver.setAddr(TEST_NODE, TEST_ADDRESS)).wait();
+  // console.log('Set new value to l2', await l2resolver.addr(TEST_NODE));
+  // console.log('Wait 10 sec');
+  // await sleep(10000)
+  // console.log('Ask durin again');
+  // console.log(await addr(TEST_NODE));
 }
 
 main();
