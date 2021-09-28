@@ -7,16 +7,12 @@ require('@eth-optimism/hardhat-ovm')
 require("@nomiclabs/hardhat-etherscan");
 
 const parsedFile = envfile.parse(fs.readFileSync('./.env'))
-const sources = process.env.IS_OPTIMISM ? "./contracts/l2" : "./contracts/l1"
 const MNEMONIC = parsedFile.MNEMONIC || 'test test test test test test test test test test test junk'
 const wallet =  ethers.Wallet.fromMnemonic(MNEMONIC);
 const INFURA_API_KEY = parsedFile.INFURA_API_KEY
 const ETHERSCAN_API = parsedFile.ETHERSCAN_API
 console.log({MNEMONIC, INFURA_API_KEY, ETHERSCAN_API})
 module.exports = {
-  paths: {
-    sources
-  },
   networks: {
     hardhat:{
       throwOnCallFailures:false
@@ -61,14 +57,9 @@ module.exports = {
   solidity: {
     compilers: [
       {
-        version: "0.8.7",
-        settings: {},
-      },
-      {
         version: "0.7.6",
         settings: {},
       }
-
     ]
   },
 };

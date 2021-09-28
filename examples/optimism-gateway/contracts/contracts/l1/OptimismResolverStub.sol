@@ -1,4 +1,4 @@
-pragma solidity ^0.8.7;
+pragma solidity ^0.7.6;
 pragma abicoder v2;
 import "./OptimismVerifierI.sol";
 
@@ -13,11 +13,12 @@ contract OptimismResolverStub {
     l2resolver = _l2resolver;
   }
 
+  // this is equivalent to having custom error
   // error OffchainLookup(bytes prefix, string url);
-
   function addr(bytes32 node) external view returns(address) {
     bytes memory prefix = abi.encodeWithSelector(OptimismResolverStub.addrWithProof.selector, node);
-  //    revert OffchainLookup(prefix, gateway);
+
+    // Equivalent to revert OffchainLookup(prefix, gateway);
     bytes memory message = abi.encodeWithSignature("OffchainLookup(bytes,string)", prefix, gateway);
     assembly {
       revert(add(message,32), mload(message))

@@ -152,8 +152,7 @@ describe("OptimismResolverStub", function() {
           const contract = new ethers.Contract(stub.address, abi, stub.provider);
           await contract.addr(testNode);
         }catch(e){
-          console.log({e})
-          expect(e.message).to.include(GATEWAY)
+          expect(e.errorName).to.eq('OffchainLookup')
         }
       });
     })
