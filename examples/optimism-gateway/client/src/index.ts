@@ -13,6 +13,11 @@ const abi = JSON.parse(
     'utf8'
   )
 );
+// const abi = [
+//   'function addr(bytes32 node) view returns(address)',
+//   'addrWithProof(bytes32 node, OptimismVerifierI.L2StateProof memory proof) external view returns(address)',
+//   'error OffchainLookup(bytes,string)'
+// ]
 const abi2 = JSON.parse(
   fs.readFileSync(
     '../server/abis/OptimismResolver.json',
@@ -29,7 +34,8 @@ let PROVIDER_URL
 if(NETWORK === 'kovan'){
   PROVIDER_URL = `https://kovan.infura.io/v3/${INFURA_API_KEY}`
 }else{
-  PROVIDER_URL = 'http://localhost:9545'
+  // PROVIDER_URL = 'http://localhost:9545'
+  PROVIDER_URL = 'http://localhost:8545'
 }
 const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
 
@@ -60,8 +66,8 @@ async function addr(node: string) {
   } catch (e) {
     console.log(`*** resolver.addr error: ${e.message}`);
     console.log(Object.keys(e));
-    const {reason, code, error, data} = e
-    console.log({reason, code, error, data});
+    // const {reason, code, error, data, errorArgs} = e
+    console.log({e});
     if (true) {
       // Hardcode the url until https://github.com/nomiclabs/hardhat/issues/1882 is solved
       const url = 'http://localhost:8081/rpc';

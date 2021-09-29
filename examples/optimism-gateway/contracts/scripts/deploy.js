@@ -5,11 +5,11 @@ const fs = require('fs')
 const envfile = require('envfile')
 const parsedFile = envfile.parse(fs.readFileSync('./.env'))
 // const OVM_ADDRESS_MANAGER = "0x3e4CFaa8730092552d9425575E49bB542e329981";
-const OVM_ADDRESS_MANAGER = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 const TEST_NODE = namehash.hash('test.test');
 
 async function main() {
-  const { RESOLVER_ADDRESS, REGISTRY_ADDRESS, VERIFIER_ADDRESS, RESOLVER_STUB_ADDRESS } = parsedFile
+  const { RESOLVER_ADDRESS, REGISTRY_ADDRESS, VERIFIER_ADDRESS, RESOLVER_STUB_ADDRESS, NETWORK } = parsedFile
+
   console.log({ RESOLVER_ADDRESS })
   /************************************
    * L1 deploy
@@ -17,9 +17,13 @@ async function main() {
   const accounts = await ethers.getSigners();
   const balance = await accounts[0].getBalance()
   console.log({balance, address:accounts[0].address})
-
   // Deploy the ENS registry
-  let ens, verifier, stub
+  let ens, verifier, stub, OVM_ADDRESS_MANAGER
+  if(NETWORK === 'local'){
+    OVM_ADDRESS_MANAGER = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+  }else if('kovan'){
+    OVM_ADDRESS_MANAGER = "0xdE1FCfB0851916CA5101820A69b13a4E276bd81F";
+  }
   const ENS = await ethers.getContractFactory("ENSRegistry");
   if(!REGISTRY_ADDRESS){
     ens = await ENS.deploy();
