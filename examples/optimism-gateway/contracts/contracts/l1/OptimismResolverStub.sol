@@ -19,7 +19,8 @@ contract OptimismResolverStub {
     bytes memory prefix = abi.encodeWithSelector(OptimismResolverStub.addrWithProof.selector, node);
 
     // Equivalent to revert OffchainLookup(prefix, gateway);
-    bytes memory message = abi.encodeWithSignature("OffchainLookup(bytes,string)", prefix, gateway);
+    bytes memory message = abi.encodeWithSignature("OffchainLookup(bytes,bytes,string)", msg.data, prefix, gateway);
+
     assembly {
       revert(add(message,32), mload(message))
     }
