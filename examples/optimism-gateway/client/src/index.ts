@@ -21,31 +21,30 @@ const abi2 = JSON.parse(
   )
 );
 const {
+  MNEMONIC,
   RESOLVER_ADDRESS,
   RESOLVER_STUB_ADDRESS,
   NETWORK,
   INFURA_API_KEY
 } = process.env;
-let PROVIDER_URL
+let PROVIDER_URL, L2_PROVIDER_URL
 if(NETWORK === 'kovan'){
   PROVIDER_URL = `https://kovan.infura.io/v3/${INFURA_API_KEY}`
+  L2_PROVIDER_URL = 'https://kovan.optimism.io'
 }else{
   PROVIDER_URL = 'http://localhost:9545'
+  L2_PROVIDER_URL = 'http://localhost:8545'
 }
 const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
-
-const L2_PROVIDER_URL = 'http://localhost:8545'
 const l2provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
 const resolver = new ethers.Contract(RESOLVER_STUB_ADDRESS, abi, provider);
 
 console.log({
   RESOLVER_STUB_ADDRESS
 })
-console.log(JSON.stringify(abi))
 
 function createL2Wallet() {
-  const mnemonic = "test test test test test test test test test test test junk";
-  const mnemonicWallet = ethers.Wallet.fromMnemonic(mnemonic);
+  const mnemonicWallet = ethers.Wallet.fromMnemonic(MNEMONIC);
   return new ethers.Wallet(mnemonicWallet.privateKey, l2provider)
 }
 
@@ -56,13 +55,9 @@ function sleep(ms:number) {
 }
 async function addr(node: string) {
   try {
-    console.log({node})
     return await resolver.addr(node);
   } catch (e) {
     console.log(`*** resolver.addr error: ${e.message}`);
-    console.log(Object.keys(e));
-    // const {reason, code, error, data, errorArgs} = e
-    console.log({e});
     if (e.errorName === 'OffchainLookup') {
       const url = e.errorArgs[2];
       const iface = new ethers.utils.Interface(abi);

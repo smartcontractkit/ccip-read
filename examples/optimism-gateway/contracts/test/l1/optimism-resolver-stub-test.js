@@ -146,7 +146,7 @@ describe("OptimismResolverStub", function() {
         try{
           const abi = [
             'function addr(bytes32 node) view returns(address)',
-            'error OffchainLookup(bytes,string)'
+            'error OffchainLookup(bytes,bytes,string)'
           ]
           // Testing to make sure it works without hardhat
           const contract = new ethers.Contract(stub.address, abi, stub.provider);

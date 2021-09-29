@@ -14,12 +14,12 @@ contract OptimismResolverStub {
   }
 
   // this is equivalent to having custom error
-  // error OffchainLookup(bytes prefix, string url);
+  // error OffchainLookup(bytes prefix, bytes, data string url);
   function addr(bytes32 node) external view returns(address) {
     bytes memory prefix = abi.encodeWithSelector(OptimismResolverStub.addrWithProof.selector, node);
 
-    // Equivalent to revert OffchainLookup(prefix, gateway);
-    bytes memory message = abi.encodeWithSignature("OffchainLookup(bytes,bytes,string)", msg.data, prefix, gateway);
+    // Equivalent to revert OffchainLookup(prefix, msg.data, gateway);
+    bytes memory message = abi.encodeWithSignature("OffchainLookup(bytes,bytes,string)", prefix,msg.data,gateway);
 
     assembly {
       revert(add(message,32), mload(message))

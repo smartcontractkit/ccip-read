@@ -123,5 +123,5 @@ server.add(
   ],
   ''
 );
-const app = server.makeApp('/rpc');
+const app = server.makeApp('/query');
 app.listen(8081);

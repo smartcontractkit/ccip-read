@@ -23,22 +23,6 @@
   {
     "inputs": [
       {
-        "internalType": "bytes",
-        "name": "prefix",
-        "type": "bytes"
-      },
-      {
-        "internalType": "string",
-        "name": "url",
-        "type": "string"
-      }
-    ],
-    "name": "OffchainLookup",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "bytes32",
         "name": "node",
         "type": "bytes32"
