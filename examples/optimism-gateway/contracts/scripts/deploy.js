@@ -22,6 +22,8 @@ async function main() {
   if(NETWORK === 'local'){
     OVM_ADDRESS_MANAGER = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
   }else if('kovan'){
+    OVM_ADDRESS_MANAGER = "0x100Dd3b414Df5BbA2B542864fF94aF8024aFdf3a";
+  }else if('mainnet'){
     OVM_ADDRESS_MANAGER = "0xdE1FCfB0851916CA5101820A69b13a4E276bd81F";
   }
   const ENS = await ethers.getContractFactory("ENSRegistry");

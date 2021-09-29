@@ -15,6 +15,9 @@ async function main() {
   // ethers.provider = new ethers.providers.JsonRpcProvider(hre.network.config.url);
   // Deploy L2 resolver and set addr record for test.test
   const accounts = await ethers.getSigners();
+  const account = accounts[0].address
+  const balance = await accounts[0].getBalance()
+  console.log({account, balance:balance.toString()})
   const OptimismResolver = await ethers.getContractFactory("OptimismResolver");
   const resolver = await OptimismResolver.deploy({gasPrice: 15000000, gasLimit:50000000});
   await resolver.deployed();
