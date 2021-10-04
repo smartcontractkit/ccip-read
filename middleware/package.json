@@ -1,5 +1,5 @@
 {
-    "name": "@ensdomains/durin-middleware",
+    "name": "makoto-durin-middleware",
     "version": "0.1.1",
     "description": "Web3 middleware that enables Durin lookups on all contract calls",
     "main": "dist/index.js",
