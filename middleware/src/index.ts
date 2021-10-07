@@ -7,6 +7,10 @@ interface EthersProvider {
     send:(method:string, params: Array<any>) => Promise<any>
 }
 
+interface OffchainLookupError {
+    errorName: string;
+}
+
 type Handler = (params?: Array<any>) => Promise<any>;
 
 class EthersProviderWrapper {
@@ -21,6 +25,10 @@ class EthersProviderWrapper {
 
 function isEthersProvider(provider: EthersProvider | DurinProvider): provider is EthersProvider  {
     return (provider as EthersProvider).send !== undefined
+}
+
+function isOffchainLookupError(x: any): x is OffchainLookupError {
+    return x.errorName === 'OffchainLookup';
 }
 
 export class DurinMiddleware implements DurinProvider {
@@ -46,9 +54,18 @@ export class DurinMiddleware implements DurinProvider {
     }
 
     async handle_eth_call(params: Array<any>): Promise<any> {
-        console.log('***request4', {params})
-        const response = await this.provider.request({method: "eth_call", params: params});
-        console.log(response);
+        console.log('***request4.1', {params})
+        let response
+        try{
+            response = await this.provider.request({method: "eth_call", params: params});
+        }catch(e){
+            console.log('***request4.2', {e})
+            if (isOffchainLookupError(e)) {
+                console.log(e.errorName)
+            }
+        }
+        
+        console.log('***request4.3',{response});
         return response;
     }
 }
