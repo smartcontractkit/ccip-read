@@ -8,12 +8,8 @@ export interface DurinProvider {
 }
 
 interface EthersProvider {
-    send:(method:string, params: Array<any>) => Promise<any>
+    send:(method:string, params: Array<any>) => Promise<any>;
 }
-
-// interface OffchainLookupError {
-//     errorName: string;
-// }
 
 type Handler = (params?: Array<any>) => Promise<any>;
 
@@ -31,10 +27,6 @@ function isEthersProvider(provider: EthersProvider | DurinProvider): provider is
     return (provider as EthersProvider).send !== undefined
 }
 
-// function isOffchainLookupError(x: any): x is OffchainLookupError {
-//     return x.errorName === 'OffchainLookup';
-// }
-
 export class DurinMiddleware implements DurinProvider {
     readonly provider: DurinProvider;
     
@@ -47,13 +39,10 @@ export class DurinMiddleware implements DurinProvider {
     }
 
     request(request: { method: string, params: Array<any> }): Promise<any> {
-        console.log('***request1', {request})
         const handler = this['handle_' + request.method as keyof DurinMiddleware] as Handler;
-        console.log('***request2', this.provider)
         if(handler !== undefined) {
             return handler.bind(this)(request.params);
         }
-        console.log('***request3', this.provider)
         return this.provider.request(request);
     }
 
@@ -63,10 +52,10 @@ export class DurinMiddleware implements DurinProvider {
         let url
         if(error){
             url = error[2]
-            handleOffchainLookup(url, params)
+            return this.handleOffchainLookup(url, params)
+        }else{
+            return response;
         }
-        console.log('***request4.5',{response});
-        return response;
     }
 
     async handleOffchainLookup(url:string, params: Array<any>): Promise<any>{
@@ -83,15 +72,18 @@ export class DurinMiddleware implements DurinProvider {
           headers: { 'Content-Type': 'application/json' },
         })
       ).json();
-      console.log({result})
-    //   try{
-    //     const outputdata = await provider.call({
-    //       to: RESOLVER_STUB_ADDRESS,
-    //       data: result && result.result,
-    //     });
-    //     return iface.decodeFunctionResult('addrWithProof', outputdata);  
-    //   }catch(ee){
-    //     console.log(`*** resolver.addrWithProof error: ${ee.message}`);
-    //   }
+      const newParams = [{
+        to: params && params[0].to,
+        data: result && result.result
+      }]
+      try{
+        const outputdata = await this.provider.request({
+            method: "eth_call",
+            params: newParams
+        });
+        return outputdata
+      }catch(ee){
+        console.log(`*** resolver.addrWithProof error:`, {ee});
+      }
     }
 }
