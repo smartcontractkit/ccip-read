@@ -93,8 +93,7 @@ server.add(
         const leaves = elements.map((element) => {
           return Buffer.from(element.slice(2), 'hex')
         })
-        const index = elements.length - 2;
-        // const index = elements.length - 1;
+        const index = elements.length - 1;
         const tree = new MerkleTree(leaves, hash)
         const treeProof = tree.getProof(leaves[index], index).map((element) => {
           return element.data
