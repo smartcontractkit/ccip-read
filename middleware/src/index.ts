@@ -82,8 +82,8 @@ export class DurinMiddleware implements DurinProvider {
             params: newParams
         });
         return outputdata
-      }catch(ee){
-        console.log(`*** resolver.addrWithProof error:`, {ee});
+      }catch(error){
+        console.log({error});
       }
     }
 }
