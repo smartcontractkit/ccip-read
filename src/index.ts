@@ -170,17 +170,17 @@ export class Server {
     const result = await handler.func(args, [context]);
     
     // Encode return data
-    let res
-    try{
+    let res;
+    try {
       res = hexlify(
         concat([
           Interface.getSighash(handler.returntype),
-          ethers.utils.defaultAbiCoder.encode(handler.returntype.inputs, result),
+          ethers.utils.defaultAbiCoder.encode(handler.returntype.inputs, result)
         ])
       );  
-    }catch(e){
-      console.log('***call:err', {e})  
+    } catch (e){
+      console.log({e});
     }
-    return res
+    return res;
   }
 }
