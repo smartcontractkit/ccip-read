@@ -108,31 +108,24 @@ yarn start
 ```
 
 ```
+$yarn start
+yarn run v1.22.15
 $ yarn build && node dist/index.js
 $ tsdx build
-@rollup/plugin-replace: 'preventAssignment' currently defaults to false. It is recommended to set this option to `true`, as the next major version will default this option to `true`.
-@rollup/plugin-replace: 'preventAssignment' currently defaults to false. It is recommended to set this option to `true`, as the next major version will default this option to `true`.
-✓ Creating entry file 1.3 secs
-✓ Building modules 3.6 secs
-{ RESOLVER_STUB_ADDRESS: '0xFD471836031dc5108809D173A067e8486B9047A3' }
+✓ Creating entry file 1.2 secs
+✓ Building modules 1.8 secs
+{ RESOLVER_STUB_ADDRESS: '0xCD8a1C3ba11CF5ECfa6267617243239504a98d90' }
 Ask durin for test.test
-*** resolver.addr error: call revert exception (method="addr(bytes32)", errorArgs=["0xd1aab3f428f4f6752878f66fd9e3626dc2a299ee01cfe269be16e267e71046f1022271cb","0x3b3b57de28f4f6752878f66fd9e3626dc2a299ee01cfe269be16e267e71046f1022271cb","http://localhost:8081/query"], errorName="OffchainLookup", errorSignature="OffchainLookup(bytes,bytes,string)", reason=null, code=CALL_EXCEPTION, version=abi/5.4.0)
-[ '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' ]
+0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
 Ask durin for test2.test
-*** resolver.addr error: call revert exception (method="addr(bytes32)", errorArgs=["0xd1aab3f428a0aea25f12a9cdf05dea70993899ec1bd771ced7ea789ffd733b1feaec1c21","0x3b3b57de28a0aea25f12a9cdf05dea70993899ec1bd771ced7ea789ffd733b1feaec1c21","http://localhost:8081/query"], errorName="OffchainLookup", errorSignature="OffchainLookup(bytes,bytes,string)", reason=null, code=CALL_EXCEPTION, version=abi/5.4.0)
-[ '0x70997970C51812dc3A010C7d01b50e0d17dc79C8' ]
+0x70997970C51812dc3A010C7d01b50e0d17dc79C8
 Update test.test on l2
 Set new value to l2 0x0000000000000000000000000000000000000001
 Wait 10 sec
 Ask durin again
-*** resolver.addr error: call revert exception (method="addr(bytes32)", errorArgs=["0xd1aab3f428f4f6752878f66fd9e3626dc2a299ee01cfe269be16e267e71046f1022271cb","0x3b3b57de28f4f6752878f66fd9e3626dc2a299ee01cfe269be16e267e71046f1022271cb","http://localhost:8081/query"], errorName="OffchainLookup", errorSignature="OffchainLookup(bytes,bytes,string)", reason=null, code=CALL_EXCEPTION, version=abi/5.4.0)
-[ '0x0000000000000000000000000000000000000001' ]
-✨  Done in 17.14s.
+0x0000000000000000000000000000000000000001
+✨  Done in 15.32s.
 ```
-
-## TODO
-
-- Extract gateway url from exception rather than hardcoding = Pending on [hardhat to fix the bug](https://github.com/nomiclabs/hardhat/issues/1882)
 
 
 ## Open questions
