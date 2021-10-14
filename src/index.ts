@@ -168,18 +168,18 @@ export class Server {
     const args = ethers.utils.defaultAbiCoder.decode(handler.calltype.inputs, '0x' + data.slice(10));
     // Call the handler
     const result = await handler.func(args, [context]);
-    
+
     // Encode return data
     let res;
     try {
       res = hexlify(
         concat([
           Interface.getSighash(handler.returntype),
-          ethers.utils.defaultAbiCoder.encode(handler.returntype.inputs, result)
+          ethers.utils.defaultAbiCoder.encode(handler.returntype.inputs, result),
         ])
-      );  
-    } catch (e){
-      console.log({e});
+      );
+    } catch (e) {
+      console.log({ e });
     }
     return res;
   }

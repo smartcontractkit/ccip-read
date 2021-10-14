@@ -37,27 +37,13 @@ if(NETWORK === 'kovan'){
 }
 const l2provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
 
-// const middleware = require('@ensdomains/durin-middleware')
-const middleware = require('makoto-durin-middleware')
+const middleware = require('@ensdomains/durin-middleware')
 const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
 const durinProvider = new middleware.DurinMiddleware(provider)
 const wrappedProvider = new ethers.providers.Web3Provider(durinProvider)
 const resolver = new ethers.Contract(RESOLVER_STUB_ADDRESS, abi, wrappedProvider);
+resolver.addr(namehash.hash('test.eth'));
 
-console.log({
-  RESOLVER_STUB_ADDRESS
-})
-
-function createL2Wallet() {
-  const mnemonicWallet = ethers.Wallet.fromMnemonic(MNEMONIC);
-  return new ethers.Wallet(mnemonicWallet.privateKey, l2provider)
-}
-
-function sleep(ms:number) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
 
 async function addr(node:string) {
   try {
