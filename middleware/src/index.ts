@@ -49,16 +49,17 @@ export class DurinMiddleware implements DurinProvider {
     async handle_eth_call(params: Array<any>): Promise<any> {
         const response = await this.provider.request({method: "eth_call", params: params});
         const error = iface.decodeErrorResult('OffchainLookup', response)
-        let url
+        let prefix, url
         if(error){
+            prefix = error[0].slice(0, 10)
             url = error[2]
-            return this.handleOffchainLookup(url, params)
+            return this.handleOffchainLookup(prefix, url, params)
         }else{
             return response;
         }
     }
 
-    async handleOffchainLookup(url:string, params: Array<any>): Promise<any>{
+    async handleOffchainLookup(prefix:string, url:string, params: Array<any>): Promise<any>{
       const body = {
         jsonrpc: '2.0',
         method: 'durin_call',
@@ -72,6 +73,9 @@ export class DurinMiddleware implements DurinProvider {
           headers: { 'Content-Type': 'application/json' },
         })
       ).json();
+      if(!result.result.startsWith(prefix)) {
+        throw new Error("Invalid callback data prefix returned by proxy");
+      }
       const newParams = [{
         to: params && params[0].to,
         data: result && result.result
