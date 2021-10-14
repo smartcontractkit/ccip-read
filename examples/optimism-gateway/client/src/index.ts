@@ -42,7 +42,6 @@ const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
 const durinProvider = new middleware.DurinMiddleware(provider)
 const wrappedProvider = new ethers.providers.Web3Provider(durinProvider)
 const resolver = new ethers.Contract(RESOLVER_STUB_ADDRESS, abi, wrappedProvider);
-resolver.addr(namehash.hash('test.eth'));
 
 console.log({
   RESOLVER_STUB_ADDRESS
