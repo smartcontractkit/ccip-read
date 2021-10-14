@@ -12,7 +12,6 @@
         "node": ">=14"
     },
     "scripts": {
-        "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register 'tests/**/*.ts'",
         "start": "tsdx watch",
         "build": "tsdx build",
         "tsdx-test": "tsdx test",

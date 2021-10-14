@@ -3878,7 +3878,7 @@ eth-ens-namehash@^2.0.8:
     idna-uts46-hx "^2.3.1"
     js-sha3 "^0.5.7"
 
-ethers@^5.4.4:
+ethers@^5.3.1, ethers@^5.4.4:
   version "5.4.7"
   resolved "https://registry.yarnpkg.com/ethers/-/ethers-5.4.7.tgz#0fd491a5da7c9793de2d6058d76b41b1e7efba8f"
   integrity sha512-iZc5p2nqfWK1sj8RabwsPM28cr37Bpq7ehTQ5rWExBr2Y09Sn1lDKZOED26n+TsZMye7Y6mIgQ/1cwpSD8XZew==
@@ -5885,6 +5885,14 @@ makeerror@1.0.x:
   integrity sha1-4BpckQnyr3lmDk6LlYd5AYT1qWw=
   dependencies:
     tmpl "1.0.x"
+
+makoto-durin-middleware@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/makoto-durin-middleware/-/makoto-durin-middleware-0.1.1.tgz#7a44272846da17107e9ab26fa0108c68e28b8779"
+  integrity sha512-YrcitYEKl4WXY2mOEO7vkWFxmuEIAhEZWtBvWi7URs+5+6fPz12tvBF0vmJ6BvHay4HCuBjrNF/kMNV5whih3Q==
+  dependencies:
+    ethers "^5.3.1"
+    jayson "^3.6.4"
 
 map-cache@^0.2.2:
   version "0.2.2"

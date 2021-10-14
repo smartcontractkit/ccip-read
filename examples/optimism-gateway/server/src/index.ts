@@ -82,8 +82,10 @@ server.add(
           i++
         ) {
           if (i < stateBatchHeader.stateRoots.length) {
+            console.log('push1', i, stateBatchHeader.stateRoots[i])
             elements.push(stateBatchHeader.stateRoots[i])
           } else {
+            console.log('push2', i, '0x' + '00'.repeat(32), ethers.utils.keccak256('0x' + '00'.repeat(32)))
             elements.push(ethers.utils.keccak256('0x' + '00'.repeat(32)))
           }
         }
@@ -108,8 +110,24 @@ server.add(
           [addrSlot],
           tag
         ]);
-
-        return [
+        console.log('1', {
+          index,
+          stateRoots:stateBatchHeader.stateRoots
+        })
+        // console.log({
+        //   addrSlot,
+        //   proof,
+        //   elements,
+        //   stateRoot: stateBatchHeader.stateRoots[index],
+        //   stateRootBatchHeader: stateBatchHeader.batch,
+        //   stateRootProof: {
+        //       index,
+        //       siblings: treeProof,
+        //   },
+        //   stateTrieWitness: RLP.encode(proof.accountProof),
+        //   storageTrieWitness: RLP.encode(proof.storageProof[0].proof),
+        // })
+        let r = [
             node,
             {
                 stateRoot: stateBatchHeader.stateRoots[index],
@@ -122,6 +140,8 @@ server.add(
                 storageTrieWitness: RLP.encode(proof.storageProof[0].proof),
             }
         ];
+        console.log({r})
+        return r
       }
     }
   ],
