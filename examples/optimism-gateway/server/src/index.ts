@@ -110,23 +110,6 @@ server.add(
           [addrSlot],
           tag
         ]);
-        console.log('1', {
-          index,
-          stateRoots:stateBatchHeader.stateRoots
-        })
-        // console.log({
-        //   addrSlot,
-        //   proof,
-        //   elements,
-        //   stateRoot: stateBatchHeader.stateRoots[index],
-        //   stateRootBatchHeader: stateBatchHeader.batch,
-        //   stateRootProof: {
-        //       index,
-        //       siblings: treeProof,
-        //   },
-        //   stateTrieWitness: RLP.encode(proof.accountProof),
-        //   storageTrieWitness: RLP.encode(proof.storageProof[0].proof),
-        // })
         let r = [
             node,
             {

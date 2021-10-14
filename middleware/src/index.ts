@@ -73,7 +73,6 @@ export class DurinMiddleware implements DurinProvider {
           headers: { 'Content-Type': 'application/json' },
         })
       ).json();
-      console.log({url, prefix, result})
       if(!result.result.startsWith(prefix)) {
         throw new Error("Invalid callback data prefix returned by proxy");
       }
