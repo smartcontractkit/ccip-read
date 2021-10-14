@@ -82,10 +82,8 @@ server.add(
           i++
         ) {
           if (i < stateBatchHeader.stateRoots.length) {
-            console.log('push1', i, stateBatchHeader.stateRoots[i])
             elements.push(stateBatchHeader.stateRoots[i])
           } else {
-            console.log('push2', i, '0x' + '00'.repeat(32), ethers.utils.keccak256('0x' + '00'.repeat(32)))
             elements.push(ethers.utils.keccak256('0x' + '00'.repeat(32)))
           }
         }
@@ -110,7 +108,7 @@ server.add(
           [addrSlot],
           tag
         ]);
-        let r = [
+        return [
             node,
             {
                 stateRoot: stateBatchHeader.stateRoots[index],
@@ -123,8 +121,6 @@ server.add(
                 storageTrieWitness: RLP.encode(proof.storageProof[0].proof),
             }
         ];
-        console.log({r})
-        return r
       }
     }
   ],

@@ -155,7 +155,7 @@ export class Server {
   async call(contextArgs: TransactionRequest[]): Promise<any> {
     const context = contextArgs[0];
     // Get the function selector
-    let data = ethers.utils.hexlify(context.data as BytesLike);
+    const data = ethers.utils.hexlify(context.data as BytesLike);
     const to = ethers.utils.hexlify(context.to as BytesLike);
     const selector = data.slice(0, 10).toLowerCase();
     // Find a function handler for this selector
@@ -170,17 +170,11 @@ export class Server {
     const result = await handler.func(args, [context]);
 
     // Encode return data
-    let res;
-    try {
-      res = hexlify(
-        concat([
-          Interface.getSighash(handler.returntype),
-          ethers.utils.defaultAbiCoder.encode(handler.returntype.inputs, result),
-        ])
-      );
-    } catch (e) {
-      console.log({ e });
-    }
-    return res;
+    return hexlify(
+      concat([
+        Interface.getSighash(handler.returntype),
+        ethers.utils.defaultAbiCoder.encode(handler.returntype.inputs, result),
+      ])
+    );
   }
 }
