@@ -6,7 +6,6 @@ const envfile = require('envfile')
 const parsedFile = envfile.parse(fs.readFileSync('./.env'))
 
 const TEST_NODE = namehash.hash('test.test');
-const TEST2_NODE = namehash.hash('test2.test');
 async function main() {
   /************************************
    * L2 deploy
@@ -22,11 +21,9 @@ async function main() {
   const resolver = await OptimismResolver.deploy();
   await resolver.deployed();
   console.log(`OptimismResolver deployed to ${resolver.address}`);
-  await (await resolver.functions.setAddr(TEST2_NODE, accounts[1].address)).wait();
-  for (let index = 0; index < 2; index++) {
-    console.log(index)
-    await (await resolver.functions.setAddr(TEST_NODE, accounts[0].address)).wait();    
-  }
+  await (await resolver.functions.setAddr(TEST_NODE, account)).wait();
+  const testAddress = await resolver.functions.addr(TEST_NODE);
+  console.log(`test.test set to ${testAddress}`)
   parsedFile.RESOLVER_ADDRESS = resolver.address
   fs.writeFileSync('./.env', envfile.stringify(parsedFile))
   console.log('Address set');

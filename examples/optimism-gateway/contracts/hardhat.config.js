@@ -11,7 +11,6 @@ const MNEMONIC = parsedFile.MNEMONIC || 'test test test test test test test test
 const wallet =  ethers.Wallet.fromMnemonic(MNEMONIC);
 const INFURA_API_KEY = parsedFile.INFURA_API_KEY
 const ETHERSCAN_API = parsedFile.ETHERSCAN_API
-console.log({MNEMONIC, INFURA_API_KEY, ETHERSCAN_API})
 module.exports = {
   networks: {
     hardhat:{
@@ -35,6 +34,7 @@ module.exports = {
     optimisticlocal: {
       url: 'http://127.0.0.1:8545',
       accounts: { mnemonic: MNEMONIC },
+      gasPrice: 15000000,
       ovm: true // This sets the network as using the ovm and ensure contract will be compiled against that.
     },
     optimisticmain: {

@@ -108,7 +108,7 @@ server.add(
           [addrSlot],
           tag
         ]);
-        return [
+        let ret = [
             node,
             {
                 stateRoot: stateBatchHeader.stateRoots[index],
@@ -121,6 +121,8 @@ server.add(
                 storageTrieWitness: RLP.encode(proof.storageProof[0].proof),
             }
         ];
+        console.log({ret})
+        return ret
       }
     }
   ],

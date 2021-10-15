@@ -35,50 +35,14 @@ if(NETWORK === 'kovan'){
   PROVIDER_URL = 'http://localhost:9545'
   L2_PROVIDER_URL = 'http://localhost:8545'
 }
-const l2provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
 
-const middleware = require('@ensdomains/durin-middleware')
 const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
+const middleware = require('@ensdomains/durin-middleware')
 const durinProvider = new middleware.DurinMiddleware(provider)
 const wrappedProvider = new ethers.providers.Web3Provider(durinProvider)
 const resolver = new ethers.Contract(RESOLVER_STUB_ADDRESS, abi, wrappedProvider);
+// const resolver = new ethers.Contract(RESOLVER_STUB_ADDRESS, abi, provider);
 
-console.log({
-  RESOLVER_STUB_ADDRESS
-})
-
-function createL2Wallet() {
-  const mnemonicWallet = ethers.Wallet.fromMnemonic(MNEMONIC);
-  return new ethers.Wallet(mnemonicWallet.privateKey, l2provider)
-}
-
-function sleep(ms:number) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
-
-async function addr(node:string) {
-  try {
-    return await resolver.addr(node);
-  } catch (e) {
-    console.log(`*** resolver.addr error: ${e.message}`);
-  }
-}
-
-async function main() {
-  console.log('Ask durin for test.test');
-  console.log(await addr(TEST_NODE));
-  console.log('Ask durin for test2.test');
-  console.log(await addr(TEST2_NODE));
-  const l2resolver = new ethers.Contract(RESOLVER_ADDRESS, abi2, createL2Wallet());
-  console.log('Update test.test on l2');
-  await (await l2resolver.setAddr(TEST_NODE, TEST_ADDRESS)).wait();
-  console.log('Set new value to l2', await l2resolver.addr(TEST_NODE));
-  console.log('Wait 10 sec');
-  await sleep(10000)
-  console.log('Ask durin again');
-  console.log(await addr(TEST_NODE));
-}
-
-main();
+resolver.addr(namehash.hash('test.test'))
+  .then(console.log)
+  .catch(console.log)
