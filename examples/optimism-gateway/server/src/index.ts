@@ -1,7 +1,7 @@
 import { ethers, BigNumber } from 'ethers';
 import { MerkleTree } from 'merkletreejs'
 import { OptimismResolverStub__factory } from './contracts/factories/OptimismResolverStub__factory';
-import { loadContract, loadContractFromManager } from './ovm-contracts';
+import { loadContract, loadContractFromManager } from '@eth-optimism/contracts';
 import { RLP } from 'ethers/lib/utils';
 const durin = require('@ensdomains/durin');
 const abi = require('../abis/OptimismResolverStub.json')
@@ -27,17 +27,17 @@ interface StateRootBatchHeader {
 
 async function getLatestStateBatchHeader(): Promise<{batch: StateRootBatchHeader, stateRoots: string[]}> {
     // Instantiate the state commitment chain
-    const ovmStateCommitmentChain = await loadContractFromManager('OVM_StateCommitmentChain', ovmAddressManager, l1_provider);
+    const stateCommitmentChain = await loadContractFromManager('StateCommitmentChain', ovmAddressManager, l1_provider);
     for(let endBlock = await l1_provider.getBlockNumber(); endBlock > 0; endBlock = Math.max(endBlock - 100, 0)) {
         // TODO: Replace with Optimism's own indexer
         const startBlock = Math.max(endBlock - 100 , 1);
-        const events: ethers.Event[] = await ovmStateCommitmentChain.queryFilter(
-            ovmStateCommitmentChain.filters.StateBatchAppended(), startBlock, endBlock);
+        const events: ethers.Event[] = await stateCommitmentChain.queryFilter(
+            stateCommitmentChain.filters.StateBatchAppended(), startBlock, endBlock);
         console.log(`${events.length} events between ${startBlock} - ${endBlock}`)
         if(events.length > 0) {
             const event = events[events.length - 1];
             const tx = await l1_provider.getTransaction(event.transactionHash);
-            const [ stateRoots ] = ovmStateCommitmentChain.interface.decodeFunctionData('appendStateBatch', tx.data);
+            const [ stateRoots ] = stateCommitmentChain.interface.decodeFunctionData('appendStateBatch', tx.data);
             return {
                 batch: {
                     batchIndex: event.args?._batchIndex,

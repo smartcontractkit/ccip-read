@@ -46,17 +46,17 @@ const ovmAddressManager = loadContract('Lib_AddressManager', ADDRESS_MANAGER_ADD
 async function getLatestStateBatchHeader(){
     // Instantiate the state commitment chain
     console.log('***getLatestStateBatchHeader1')
-    const ovmStateCommitmentChain = await loadContractFromManager('OVM_StateCommitmentChain', ovmAddressManager, l1_provider);
-    console.log('***getLatestStateBatchHeader2', ovmStateCommitmentChain)
+    const stateCommitmentChain = await loadContractFromManager('StateCommitmentChain', ovmAddressManager, l1_provider);
+    console.log('***getLatestStateBatchHeader2', stateCommitmentChain)
     for(let endBlock = await l1_provider.getBlockNumber(); endBlock > 0; endBlock = Math.max(endBlock - 100, 0)) {
-        console.log('***getLatestStateBatchHeader3', ovmStateCommitmentChain)
+        console.log('***getLatestStateBatchHeader3', stateCommitmentChain)
         const startBlock = Math.max(endBlock - 100, 1);
-        const events = await ovmStateCommitmentChain.queryFilter(
-            ovmStateCommitmentChain.filters.StateBatchAppended(), startBlock, endBlock);
+        const events = await stateCommitmentChain.queryFilter(
+            stateCommitmentChain.filters.StateBatchAppended(), startBlock, endBlock);
         if(events.length > 0) {
             const event = events[events.length - 1];
             const tx = await l1_provider.getTransaction(event.transactionHash);
-            const [ stateRoots ] = ovmStateCommitmentChain.interface.decodeFunctionData('appendStateBatch', tx.data);
+            const [ stateRoots ] = stateCommitmentChain.interface.decodeFunctionData('appendStateBatch', tx.data);
             return {
                 batch: {
                     batchIndex: event.args?._batchIndex,
@@ -81,11 +81,11 @@ async function main(){
   // Instantiate the manager
   const abi = getContractInterface('Lib_AddressManager')
   console.log(1, JSON.stringify(abi))
-  const ovmAddressManager = new Contract(ADDRESS_MANAGER_ADDRESS, abi, l1_provider) 
+  const addressManager = new Contract(ADDRESS_MANAGER_ADDRESS, abi, l1_provider) 
   console.log(2)
-  const owner = await ovmAddressManager.owner()
+  const owner = await addressManager.owner()
   console.log(3, {owner})
-  const address = await ovmAddressManager.getAddress('OVM_StateCommitmentChain')
+  const address = await addressManager.getAddress('StateCommitmentChain')
   console.log(4, {address})
 }
 main()

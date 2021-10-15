@@ -10,12 +10,12 @@ This example is a port of https://github.com/ensdomains/l2gateway-demo
 ### When A user updates smart contract on l2
 
 - l1 state root gets updated
-- `OVM_StateCommitmentChain` on l1 emits events
+- `StateCommitmentChain` on l1 emits events
 
 ### When A user query l2 data via Durin
 
 - The client library first calls `resolver.addr()` which throws an error with Durin gateway url
-- Durin extracts the latest state batch header from `OVM_StateCommitmentChain.StateBatchAppended`event.
+- Durin extracts the latest state batch header from `StateCommitmentChain.StateBatchAppended`event.
 - Durin constructs MerkleTree based on the state roots
 - Durin calls l2 `eth_getProof` to fetch the first storage slot of the `OptimismResolver` contract where `mapping(bytes32=>address) addresses` is stored
 - Durin returns the `stateBatchHeader` in the follwoing format

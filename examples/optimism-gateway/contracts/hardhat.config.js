@@ -3,8 +3,7 @@ const envfile = require('envfile');
 const ethers = require('ethers');
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
-require('@eth-optimism/hardhat-ovm')
-require("@nomiclabs/hardhat-etherscan");
+// require("@nomiclabs/hardhat-etherscan");
 
 const parsedFile = envfile.parse(fs.readFileSync('./.env'))
 const MNEMONIC = parsedFile.MNEMONIC || 'test test test test test test test test test test test junk'
@@ -28,20 +27,17 @@ module.exports = {
     optimistickovan: {
       url: 'https://kovan.optimism.io',
       gasPrice: 15000000,
-      accounts: { mnemonic: MNEMONIC },
-      ovm: true // This sets the network as using the ovm and ensure contract will be compiled against that.
+      accounts: { mnemonic: MNEMONIC }
     },
     optimisticlocal: {
       url: 'http://127.0.0.1:8545',
       accounts: { mnemonic: MNEMONIC },
-      gasPrice: 15000000,
-      ovm: true // This sets the network as using the ovm and ensure contract will be compiled against that.
+      gasPrice: 15000000
     },
     optimisticmain: {
       url: 'https://mainnet.optimism.io',
       gasPrice: 15000000,
-      accounts: { mnemonic: MNEMONIC },
-      ovm: true // This sets the network as using the ovm and ensure contract will be compiled against that.
+      accounts: { mnemonic: MNEMONIC }
     }
   },
   etherscan: {

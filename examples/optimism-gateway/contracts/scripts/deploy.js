@@ -4,7 +4,7 @@ const namehash = require('eth-ens-namehash');
 const fs = require('fs')
 const envfile = require('envfile')
 const parsedFile = envfile.parse(fs.readFileSync('./.env'))
-// const OVM_ADDRESS_MANAGER = "0x3e4CFaa8730092552d9425575E49bB542e329981";
+// const ADDRESS_MANAGER = "0x3e4CFaa8730092552d9425575E49bB542e329981";
 const TEST_NODE = namehash.hash('test.test');
 
 async function main() {
@@ -18,13 +18,13 @@ async function main() {
   const balance = await accounts[0].getBalance()
   console.log({balance, address:accounts[0].address})
   // Deploy the ENS registry
-  let ens, verifier, stub, OVM_ADDRESS_MANAGER
+  let ens, verifier, stub, ADDRESS_MANAGER
   if(NETWORK === 'local'){
-    OVM_ADDRESS_MANAGER = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+    ADDRESS_MANAGER = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
   }else if('kovan'){
-    OVM_ADDRESS_MANAGER = "0x100Dd3b414Df5BbA2B542864fF94aF8024aFdf3a";
+    ADDRESS_MANAGER = "0x100Dd3b414Df5BbA2B542864fF94aF8024aFdf3a";
   }else if('mainnet'){
-    OVM_ADDRESS_MANAGER = "0xdE1FCfB0851916CA5101820A69b13a4E276bd81F";
+    ADDRESS_MANAGER = "0xdE1FCfB0851916CA5101820A69b13a4E276bd81F";
   }
   const ENS = await ethers.getContractFactory("ENSRegistry");
   if(!REGISTRY_ADDRESS){
@@ -46,7 +46,7 @@ async function main() {
   // Deploy the resolver stub
   const OptimismVerifier = await ethers.getContractFactory("OptimismVerifier");
   if(!VERIFIER_ADDRESS){
-    verifier = await OptimismVerifier.deploy(OVM_ADDRESS_MANAGER);
+    verifier = await OptimismVerifier.deploy(ADDRESS_MANAGER);
     await verifier.deployed();
     parsedFile.VERIFIER_ADDRESS = verifier.address
     fs.writeFileSync('./.env', envfile.stringify(parsedFile))
