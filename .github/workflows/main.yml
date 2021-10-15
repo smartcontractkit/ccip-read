@@ -22,7 +22,7 @@ jobs:
 
       - name: Install deps and build (with cache)
         run: yarn --frozen-lockfile
-        working-directory: ${{ matrix.target }}
+        working-directory: ./${{ matrix.target }}
 
       - name: Lint
         run: yarn lint
