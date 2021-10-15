@@ -9,7 +9,6 @@ jobs:
       matrix:
         node: ['14.x', '16.x']
         os: [ubuntu-latest]
-        target: ["server", "middlewear"]
 
     steps:
       - name: Checkout repo
@@ -21,18 +20,19 @@ jobs:
           node-version: ${{ matrix.node }}
 
       - name: Install deps and build (with cache)
-        run: yarn --frozen-lockfile
-        working-directory: ./${{ matrix.target }}
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: ./server
 
       - name: Lint
         run: yarn lint
-        working-directory: ./${{ matrix.target }}
+        working-directory: ./server
 
       - name: Build
         run: yarn build
-        working-directory: ./${{ matrix.target }}
+        working-directory: ./server
 
       - name: Test
         run: yarn test --ci --coverage --maxWorkers=2
-        working-directory: ./${{ matrix.target }}
+        working-directory: ./server
 
