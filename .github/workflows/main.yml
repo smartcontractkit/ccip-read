@@ -48,8 +48,3 @@ jobs:
       - name: Build middleware
         run: yarn build
         working-directory: ./middleware
-
-      - name: Test middleware
-        run: yarn test --ci --coverage --maxWorkers=2
-        working-directory: ./middleware
-
