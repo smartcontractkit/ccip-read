@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "@ensdomains/ens": "^0.5.0",
-    "@eth-optimism/contracts": "0.0.0-2021914184730",
+    "@eth-optimism/contracts": "0.0.0-2021915175358",
     "envfile": "^6.17.0"
   }
 }

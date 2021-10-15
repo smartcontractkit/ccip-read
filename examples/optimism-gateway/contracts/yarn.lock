@@ -28,21 +28,21 @@
   resolved "https://registry.yarnpkg.com/@ensdomains/resolver/-/resolver-0.2.4.tgz#c10fe28bf5efbf49bff4666d909aed0265efbc89"
   integrity sha512-bvaTH34PMCbv6anRa9I/0zjLJgY4EuznbEMgbV77JBCQ9KNC46rzi0avuxpOfu+xDjPEtSFGqVEOr5GlUSGudA==
 
-"@eth-optimism/contracts@0.0.0-2021914184730":
-  version "0.0.0-2021914184730"
-  resolved "https://registry.yarnpkg.com/@eth-optimism/contracts/-/contracts-0.0.0-2021914184730.tgz#e3d7e701557b50f25a53f78bfc581bbe83902912"
-  integrity sha512-Th8LmuvFVcqLPi+9rgLxz3bEfSQwTWS2HjYf1RtlgWnsV4YQmIUsJhM431NRuLzqReCli77devki0zwLoaxJ1w==
+"@eth-optimism/contracts@0.0.0-2021915175358":
+  version "0.0.0-2021915175358"
+  resolved "https://registry.yarnpkg.com/@eth-optimism/contracts/-/contracts-0.0.0-2021915175358.tgz#ec0142b4e53d8a74654941170a8e18b33c0a174d"
+  integrity sha512-v6WwM49mPzN/RCdYclqnuXWXH1CZtB3W1Gyvr8lKij9pUxa6YhWPD7LjmQOFzgsAa981YxQvq03iIP9XYiAvVw==
   dependencies:
-    "@eth-optimism/core-utils" "^0.0.0-2021914184730"
+    "@eth-optimism/core-utils" "^0.0.0-2021915175358"
     "@ethersproject/abstract-provider" "^5.4.1"
     "@ethersproject/abstract-signer" "^5.4.1"
     "@ethersproject/contracts" "^5.4.1"
     "@ethersproject/hardware-wallets" "^5.4.0"
 
-"@eth-optimism/core-utils@^0.0.0-2021914184730":
-  version "0.0.0-2021914184730"
-  resolved "https://registry.yarnpkg.com/@eth-optimism/core-utils/-/core-utils-0.0.0-2021914184730.tgz#e0bd7caf188782d67ba1034dee7bcb1db3df725f"
-  integrity sha512-B0WfoIWzy3po98LC69wXxShuER8pf7jVVXdXYo0fnOkqyfYZfKE1Y3HrVhc0iZlD3jaR1vcvSx6jUq4dvRWdcA==
+"@eth-optimism/core-utils@^0.0.0-2021915175358":
+  version "0.0.0-2021915175358"
+  resolved "https://registry.yarnpkg.com/@eth-optimism/core-utils/-/core-utils-0.0.0-2021915175358.tgz#5d4db4782a8c61710266428c99a4721349b96291"
+  integrity sha512-Afr9Wo5AlO5VUE/F9Y+aGVwT90tqNSPpf+EjAKdELSyyoGbaxV831LNSR1uhiXOHBJKNbyklfuAkssEHmQXNuA==
   dependencies:
     "@ethersproject/abstract-provider" "^5.4.1"
     "@ethersproject/providers" "^5.4.5"
