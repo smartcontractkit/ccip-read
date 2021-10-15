@@ -19,20 +19,37 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Install deps and build (with cache)
+      - name: Install deps and build (with cache) server
         uses: bahmutov/npm-install@v1
         with:
           working-directory: ./server
 
-      - name: Lint
+      - name: Lint server
         run: yarn lint
         working-directory: ./server
 
-      - name: Build
+      - name: Build server
         run: yarn build
         working-directory: ./server
 
-      - name: Test
+      - name: Test server
         run: yarn test --ci --coverage --maxWorkers=2
         working-directory: ./server
+
+      - name: Install deps and build (with cache) middleware
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: ./middleware
+
+      - name: Lint middleware
+        run: yarn lint
+        working-directory: ./middleware
+
+      - name: Build middleware
+        run: yarn build
+        working-directory: ./middleware
+
+      - name: Test middleware
+        run: yarn test --ci --coverage --maxWorkers=2
+        working-directory: ./middleware
 
