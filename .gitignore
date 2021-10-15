@@ -1,7 +1,10 @@
 .DS_Store
-node_modules
-dist
+**/node_modules
+**/dist
 docs
-.env
-artifacts
-cache
+**/.env
+**/artifacts
+**/artifacts-ovm
+**/cache
+**/cache-ovm
+**/.github/**

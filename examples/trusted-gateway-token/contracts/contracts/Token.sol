@@ -18,7 +18,7 @@ contract Token is ERC20, Ownable {
   string public url;
   address private _signer;
   mapping(address=>bool) claimed;
-  error OffchainLookup(string url, bytes prefix);
+  error OffchainLookup(bytes prefix, bytes data, string url);
   struct BalanceProof {
     bytes signature;
     uint balance;
@@ -51,8 +51,10 @@ contract Token is ERC20, Ownable {
     if(claimed[addr]){
       return super.balanceOf(addr);
     }else{
-      revert OffchainLookup(url,
-        abi.encodeWithSignature("balanceOfWithProof(address addr, BalanceProof memory proof)", addr)
+      revert OffchainLookup(
+        abi.encodeWithSignature("balanceOfWithProof(address addr, BalanceProof memory proof)", addr),
+        msg.data,
+        url
       );
     }
   }
@@ -61,7 +63,11 @@ contract Token is ERC20, Ownable {
     if(claimed[msg.sender]){
       _transfer(msg.sender, recipient, amount);
     }else{
-      revert OffchainLookup(url, abi.encodeWithSelector(Token.transferWithProof.selector, recipient, amount));
+      revert OffchainLookup(
+        abi.encodeWithSelector(Token.transferWithProof.selector, recipient, amount),
+        msg.data,
+        url
+      );
     }
     return true;
   }

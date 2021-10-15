@@ -1,0 +1,41 @@
+{
+  "name": "ens-l2-optimism",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "hardhat test",
+    "local:deploy": "yarn local:deploy:l2 && yarn local:deploy:l1",
+    "local:deploy:l1": "npx hardhat --network local run scripts/deploy.js",
+    "local:deploy:l2": "IS_OPTIMISM=true npx hardhat --network optimisticlocal run scripts/l2deploy.js",
+    "kovan:deploy": "yarn kovan:deploy:l2 && yarn kovan:deploy:l1",
+    "kovan:deploy:l1": "npx hardhat --network kovan run scripts/deploy.js",
+    "kovan:deploy:l2": "IS_OPTIMISM=true npx hardhat --network optimistickovan run scripts/l2deploy.js",
+    "test:l1": "npx hardhat --network rinkeby run scripts/test.js",
+    "test:l2": "IS_OPTIMISM=true npx hardhat --network optimistic run scripts/l2test.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@eth-optimism/plugins": "1.0.0-alpha.3",
+    "@eth-optimism/smock": "1.1.10",
+    "@nomiclabs/ethereumjs-vm": "^4",
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@openzeppelin/contracts": "^3.3.0",
+    "chai": "^4.2.0",
+    "eth-ens-namehash": "^2.0.8",
+    "ethereum-waffle": "^3.2.1",
+    "ethers": "^5.4.6",
+    "hardhat": "^2.1.1",
+    "merkle-patricia-tree": "^4.0.0",
+    "random-bytes-seed": "^1.0.3",
+    "rlp": "^2.2.6"
+  },
+  "dependencies": {
+    "@ensdomains/ens": "^0.5.0",
+    "@eth-optimism/contracts": "^0.4.12",
+    "@eth-optimism/hardhat-ovm": "^0.2.3",
+    "envfile": "^6.17.0"
+  }
+}
