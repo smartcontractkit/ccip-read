@@ -1,7 +1,37 @@
-# Durin
+# Durin server
 
-[![CI](https://github.com/weiroll/weiroll.js/actions/workflows/main.yml/badge.svg)](https://github.com/weiroll/weiroll.js/actions/workflows/main.yml)[![size](https://github.com/weiroll/weiroll.js/actions/workflows/size.yml/badge.svg)](https://github.com/weiroll/weiroll.js/actions/workflows/size.yml)[![Docs](https://github.com/weiroll/weiroll.js/actions/workflows/docs.yml/badge.svg)](https://weiroll.github.io/weiroll.js/)
+ Implements a Durin gateway service using express.js.
+ 
+## How to install
 
-Durin is a protocol and framework for secure retrieval of offchain data as part of EVM smart contract communication. This repository contains a Typescript framework for writing Durin gateway services.
+```
+yarn add @ensdomains/durin
+```
 
-The Durin specification is [EIP 3668](https://eips.ethereum.org/EIPS/eip-3668).
+## Example usage:
+
+ ```javascript
+ const durin = require('durin');
+ const server = new durin.Server();
+ const abi = [
+   'function balanceOf(address addr) public returns(uint256)',
+   'function balanceOfWithProof(address addr, uint256 balance, bytes proof) public returns(uint256)',
+ ];
+ server.add(abi, [
+   {
+     calltype: 'balanceOf',
+     returntype: 'balanceOfWithProof',
+     func: async (contractAddress, [addr]) => {
+       const balance = getBalance(addr);
+       const sig = signMessage([addr, balance]);
+       return [addr, balance, sig];
+     }
+   }
+ ], '0x...');
+ const app = server.makeApp();
+ app.listen(8080);
+ ```
+ 
+ Notice `.add()` specifies the function being implemented (`balanceOf`) and the verification
+ function it returns encoded calldata for (`balanceOfWithProof`), and the handler function
+ returns arguments matching the input arguments of `balanceOfWithProof`.
