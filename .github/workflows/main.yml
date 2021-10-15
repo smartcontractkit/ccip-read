@@ -22,7 +22,7 @@ jobs:
 
       - name: Install deps and build (with cache)
         uses: bahmutov/npm-install@v1
-        working-directory: ./${{ matrix.target }}
+        working-directory: server
       - name: Lint
         run: yarn lint
         working-directory: ./${{ matrix.target }}
