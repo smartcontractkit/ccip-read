@@ -65,8 +65,12 @@ server.add(
         const node = args[0];
         const address = _context[0]['to']
         const contract = OptimismResolverStub__factory.connect(address, l1_provider);
-        const stateBatchHeader = await getLatestStateBatchHeader();
-        console.log({stateBatchHeader})
+        let stateBatchHeader:any
+        try{
+          stateBatchHeader = await getLatestStateBatchHeader();
+        }catch(e){
+          console.log('stateBatchHeader error', {e})
+        }
 
         // The l2 block number we'll use is the last one in the state batch
         const l2BlockNumber = stateBatchHeader.batch.prevTotalElements.add(stateBatchHeader.batch.batchSize);
@@ -104,7 +108,6 @@ server.add(
           [addrSlot],
           tag
         ]);
-
         return [
             node,
             {

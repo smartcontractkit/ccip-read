@@ -1,29 +1,93 @@
-// import { fetchJson } from "@ethersproject/web";
+const ethers = require('ethers');
+const nodeFetch = require('node-fetch');
+const abi = ['error OffchainLookup(bytes,bytes,string)']
+const iface = new ethers.utils.Interface(abi)
 
-export interface Web3Provider {
-    request: (request: { method: string, params?: Array<any> }) => Promise<any>;
+export interface DurinProvider {
+    request: (request: { method: string, params: Array<any> }) => Promise<any>;
+}
+
+interface EthersProvider {
+    send:(method:string, params: Array<any>) => Promise<any>;
 }
 
 type Handler = (params?: Array<any>) => Promise<any>;
 
-export class DurinMiddleware implements Web3Provider {
-    readonly provider: Web3Provider;
+class EthersProviderWrapper {
+    readonly provider:EthersProvider;
+    constructor(provider:EthersProvider ){
+        this.provider = provider
+    }
+    request(request: { method: string, params: Array<any> }){
+        return this.provider.send(request.method, request.params)
+    }
+}
 
-    constructor(provider: Web3Provider) {
-        this.provider = provider;
+function isEthersProvider(provider: EthersProvider | DurinProvider): provider is EthersProvider  {
+    return (provider as EthersProvider).send !== undefined
+}
+
+export class DurinMiddleware implements DurinProvider {
+    readonly provider: DurinProvider;
+    
+    constructor(provider: EthersProvider | DurinProvider) {
+        if (isEthersProvider(provider) ) {
+            this.provider = new EthersProviderWrapper(provider)
+        } else {
+            this.provider = provider
+        }
     }
 
-    request(request: { method: string, params?: Array<any> }): Promise<any> {
+    request(request: { method: string, params: Array<any> }): Promise<any> {
         const handler = this['handle_' + request.method as keyof DurinMiddleware] as Handler;
         if(handler !== undefined) {
-            return handler(request.params);
+            return handler.bind(this)(request.params);
         }
         return this.provider.request(request);
     }
 
-    async handle_call(params?: Array<any>): Promise<any> {
-        const response = await this.provider.request({method: "call", params: params});
-        console.log(response);
-        return response;
+    async handle_eth_call(params: Array<any>): Promise<any> {
+        const response = await this.provider.request({method: "eth_call", params: params});
+        const error = iface.decodeErrorResult('OffchainLookup', response)
+        let prefix, url
+        if(error){
+            prefix = error[0].slice(0, 10)
+            url = error[2]
+            return this.handleOffchainLookup(prefix, url, params)
+        }else{
+            return response;
+        }
+    }
+
+    async handleOffchainLookup(prefix:string, url:string, params: Array<any>): Promise<any>{
+      const body = {
+        jsonrpc: '2.0',
+        method: 'durin_call',
+        params,
+        id: 1,
+      };
+      const result = await (
+        await nodeFetch(url, {
+          method: 'post',
+          body: JSON.stringify(body),
+          headers: { 'Content-Type': 'application/json' },
+        })
+      ).json();
+      if(!result.result.startsWith(prefix)) {
+        throw new Error("Invalid callback data prefix returned by proxy");
+      }
+      const newParams = [{
+        to: params && params[0].to,
+        data: result && result.result
+      }]
+      try{
+        const outputdata = await this.provider.request({
+            method: "eth_call",
+            params: newParams
+        });
+        return outputdata
+      }catch(error){
+        console.log({error});
+      }
     }
 }
