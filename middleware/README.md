@@ -1,7 +1,37 @@
-# Durin
+# Durin Middleware
 
-[![CI](https://github.com/weiroll/weiroll.js/actions/workflows/main.yml/badge.svg)](https://github.com/weiroll/weiroll.js/actions/workflows/main.yml)[![size](https://github.com/weiroll/weiroll.js/actions/workflows/size.yml/badge.svg)](https://github.com/weiroll/weiroll.js/actions/workflows/size.yml)[![Docs](https://github.com/weiroll/weiroll.js/actions/workflows/docs.yml/badge.svg)](https://weiroll.github.io/weiroll.js/)
+Durin Middleware wraps [EIP1193 compatible provider](https://eips.ethereum.org/EIPS/eip-1193) and adds support to call Durin middleware
 
-Durin is a protocol and framework for secure retrieval of offchain data as part of EVM smart contract communication. This repository contains a Typescript framework for writing Durin gateway services.
+## How to install
 
-The Durin specification is [EIP 3668](https://eips.ethereum.org/EIPS/eip-3668).
+```
+npm install @ensdomains/durin-middleware
+```
+
+## How to use
+
+```js
+const middleware = require('@ensdomains/durin-middleware')
+const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
+const durinProvider = new middleware.DurinMiddleware(provider)
+const wrappedProvider = new ethers.providers.Web3Provider(durinProvider)
+const resolver = new ethers.Contract(RESOLVER_STUB_ADDRESS, abi, wrappedProvider);
+resolver.addr(node);
+```
+
+For the full example, refer to `examples/optimism-gateway/client/src/index.ts`
+
+## Underthehood.
+
+Durin Middleware implements [Provider.request(args: RequestArguments): Promise<unknown>;](https://eips.ethereum.org/EIPS/eip-1193#request-1) function.
+
+If the request returns `OffchainLookup` returns, then the middleware does the following
+
+- Extract `prefix` and `url` from the error arguments
+- Calls `url` which often calls l2 on behalf the user and returns `*withProof` function name with data and proof
+- Extract the result of the call to `url` and calls the function (eg: `addrWithProof`)
+
+## TODO
+
+- Add Test
+
