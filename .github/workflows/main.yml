@@ -25,13 +25,11 @@ jobs:
 
       - name: Lint
         run: yarn lint
-        with:
-          context: ./${{ matrix.target }}
-
+        working-directory: ./${{ matrix.target }}
       - name: Test
         run: yarn test --ci --coverage --maxWorkers=2
-        with:
-          context: ./${{ matrix.target }}
+        working-directory: ./${{ matrix.target }}
 
       - name: Build
         run: yarn build
+        working-directory: ./${{ matrix.target }}
