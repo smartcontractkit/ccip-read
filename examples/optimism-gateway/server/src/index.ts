@@ -15,7 +15,7 @@ const l2_provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
 const ADDRESS_MANAGER_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
 
 // Instantiate the manager
-const ovmAddressManager = loadContract('Lib_AddressManager', ADDRESS_MANAGER_ADDRESS, l1_provider);
+const addressManager = loadContract('Lib_AddressManager', ADDRESS_MANAGER_ADDRESS, l1_provider);
 
 interface StateRootBatchHeader {
     batchIndex: BigNumber
@@ -26,8 +26,7 @@ interface StateRootBatchHeader {
 }
 
 async function getLatestStateBatchHeader(): Promise<{batch: StateRootBatchHeader, stateRoots: string[]}> {
-    // Instantiate the state commitment chain
-    const stateCommitmentChain = await loadContractFromManager('StateCommitmentChain', ovmAddressManager, l1_provider);
+    const stateCommitmentChain = await loadContractFromManager({name:'StateCommitmentChain', Lib_AddressManager:addressManager, provider:l1_provider});
     for(let endBlock = await l1_provider.getBlockNumber(); endBlock > 0; endBlock = Math.max(endBlock - 100, 0)) {
         // TODO: Replace with Optimism's own indexer
         const startBlock = Math.max(endBlock - 100 , 1);
@@ -52,7 +51,6 @@ async function getLatestStateBatchHeader(): Promise<{batch: StateRootBatchHeader
     }
     throw Error("No state root batches found");
 }
-
 const server = new durin.Server();
 server.add(
   abi,
