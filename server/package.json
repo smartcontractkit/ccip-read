@@ -17,7 +17,6 @@
         "build": "tsdx build",
         "tsdx-test": "tsdx test",
         "lint": "tsdx lint",
-        "prepare": "husky install && tsdx build",
         "analyze": "size-limit --why",
         "format": "prettier --write \"./src/*.{js,ts}\" \"tests/*.{js,ts}\"",
         "docs": "typedoc"

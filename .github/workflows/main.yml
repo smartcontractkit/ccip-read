@@ -9,6 +9,7 @@ jobs:
       matrix:
         node: ['14.x', '16.x']
         os: [ubuntu-latest]
+        target: ["server", "middlewear"]
 
     steps:
       - name: Checkout repo
@@ -24,9 +25,13 @@ jobs:
 
       - name: Lint
         run: yarn lint
+        with:
+          context: ./${{ matrix.target }}
 
       - name: Test
         run: yarn test --ci --coverage --maxWorkers=2
+        with:
+          context: ./${{ matrix.target }}
 
       - name: Build
         run: yarn build
