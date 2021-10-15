@@ -19,7 +19,7 @@ async function main() {
   const balance = await accounts[0].getBalance()
   console.log({account, balance:balance.toString()})
   const OptimismResolver = await ethers.getContractFactory("OptimismResolver");
-  const resolver = await OptimismResolver.deploy({gasPrice: 15000000, gasLimit:50000000});
+  const resolver = await OptimismResolver.deploy();
   await resolver.deployed();
   console.log(`OptimismResolver deployed to ${resolver.address}`);
   await (await resolver.functions.setAddr(TEST2_NODE, accounts[1].address)).wait();
