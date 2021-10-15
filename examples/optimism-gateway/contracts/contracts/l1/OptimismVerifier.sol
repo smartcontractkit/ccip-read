@@ -1,4 +1,4 @@
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.9;
 pragma abicoder v2;
 
 import { Lib_AddressResolver } from "@eth-optimism/contracts/libraries/resolver/Lib_AddressResolver.sol";
@@ -39,6 +39,23 @@ contract OptimismVerifier is Lib_AddressResolver {
     Lib_OVMCodec.EVMAccount memory account = Lib_OVMCodec.decodeEVMAccount(encodedResolverAccount);
     (bool storageExists, bytes memory retrievedValue) = Lib_SecureMerkleTrie.get(abi.encodePacked(slot), proof.storageTrieWitness, account.storageRoot);
     require(storageExists, "Storage value does not exist");
-    return Lib_BytesUtils.toBytes32PadLeft( Lib_RLPReader.readBytes(retrievedValue));
+    return toBytes32PadLeft( Lib_RLPReader.readBytes(retrievedValue));
+  }
+
+  function toBytes32PadLeft(
+      bytes memory _bytes
+  )
+      internal
+      pure
+      returns (
+          bytes32
+      )
+  {
+      bytes32 ret;
+      uint256 len = _bytes.length <= 32 ? _bytes.length : 32;
+      assembly {
+          ret := shr(mul(sub(32, len), 8), mload(add(_bytes, 32)))
+      }
+      return ret;
   }
 }
