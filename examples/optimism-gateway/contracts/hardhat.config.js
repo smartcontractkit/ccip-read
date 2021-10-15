@@ -20,13 +20,10 @@ module.exports = {
     },
     kovan: {
       url: `https://kovan.infura.io/v3/${INFURA_API_KEY}`,
-      gasPrice: 15000000,
-      gas: 3000000,
       accounts: [wallet.privateKey]
     },
     optimistickovan: {
       url: 'https://kovan.optimism.io',
-      gasPrice: 15000000,
       accounts: { mnemonic: MNEMONIC }
     },
     optimisticlocal: {

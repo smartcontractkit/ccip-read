@@ -14,12 +14,6 @@ const abi = [...JSON.parse(
   )
 ), 'error OffchainLookup(bytes,bytes,string)'
 ]
-const abi2 = JSON.parse(
-  fs.readFileSync(
-    '../server/abis/OptimismResolver.json',
-    'utf8'
-  )
-);
 const {
   MNEMONIC,
   RESOLVER_ADDRESS,
@@ -45,4 +39,4 @@ const resolver = new ethers.Contract(RESOLVER_STUB_ADDRESS, abi, wrappedProvider
 
 resolver.addr(namehash.hash('test.test'))
   .then(console.log)
-  .catch(console.log)
+  .catch(console.log) 
