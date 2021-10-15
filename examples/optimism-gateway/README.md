@@ -74,7 +74,7 @@ This will deploy `OptimismResolver` into l2 and `OptimismResolverStub` to l1
 ~/.../optimism-gateway/contracts (optimism)$yarn deploy
 yarn run v1.22.10
 $ yarn deploy:l2 && yarn deploy:l1
-$ IS_OPTIMISM=true npx hardhat --network optimistic run scripts/l2deploy.js
+$ npx hardhat --network optimistic run scripts/l2deploy.js
 OptimismResolver deployed to 0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6
 Address set
 $ npx hardhat --network integration run scripts/deploy.js
