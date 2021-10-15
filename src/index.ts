@@ -109,7 +109,6 @@ export class Server {
     address?: string
   ) {
     const abiInterface = toInterface(abi);
-
     if (this.handlers[address || ''] !== undefined) {
       throw new Error(`Interface for address ${address} already defined`);
     }
@@ -121,7 +120,6 @@ export class Server {
       if (!handler.options?.ignoreReturnTypeMismatch && !typematch(callfunc.outputs, returnfunc.outputs)) {
         throw new Error(`Return types of ${handler.calltype} and ${handler.returntype} do not match`);
       }
-
       handlersForAddress[Interface.getSighash(callfunc)] = {
         calltype: callfunc,
         returntype: returnfunc,
@@ -160,7 +158,6 @@ export class Server {
     const data = ethers.utils.hexlify(context.data as BytesLike);
     const to = ethers.utils.hexlify(context.to as BytesLike);
     const selector = data.slice(0, 10).toLowerCase();
-
     // Find a function handler for this selector
     const handler = this.getHandler(to, selector);
     if (handler === undefined) {
@@ -169,7 +166,6 @@ export class Server {
 
     // Decode function arguments
     const args = ethers.utils.defaultAbiCoder.decode(handler.calltype.inputs, '0x' + data.slice(10));
-
     // Call the handler
     const result = await handler.func(args, [context]);
 

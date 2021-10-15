@@ -18,8 +18,7 @@ module.exports = {
       throwOnCallFailures:false
     },
     local: {
-      url: "http://localhost:9545/",
-      gasPrice: 15000000
+      url: "http://localhost:9545/"
     },
     kovan: {
       url: `https://kovan.infura.io/v3/${INFURA_API_KEY}`,
@@ -30,13 +29,11 @@ module.exports = {
     optimistickovan: {
       url: 'https://kovan.optimism.io',
       gasPrice: 15000000,
-      // gas: 3000000,
       accounts: { mnemonic: MNEMONIC },
       ovm: true // This sets the network as using the ovm and ensure contract will be compiled against that.
     },
     optimisticlocal: {
       url: 'http://127.0.0.1:8545',
-      gasPrice: 15000000,
       accounts: { mnemonic: MNEMONIC },
       ovm: true // This sets the network as using the ovm and ensure contract will be compiled against that.
     },

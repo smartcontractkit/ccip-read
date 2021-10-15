@@ -35,9 +35,13 @@ if(NETWORK === 'kovan'){
   PROVIDER_URL = 'http://localhost:9545'
   L2_PROVIDER_URL = 'http://localhost:8545'
 }
-const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
 const l2provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
-const resolver = new ethers.Contract(RESOLVER_STUB_ADDRESS, abi, provider);
+
+const middleware = require('@ensdomains/durin-middleware')
+const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
+const durinProvider = new middleware.DurinMiddleware(provider)
+const wrappedProvider = new ethers.providers.Web3Provider(durinProvider)
+const resolver = new ethers.Contract(RESOLVER_STUB_ADDRESS, abi, wrappedProvider);
 
 console.log({
   RESOLVER_STUB_ADDRESS
@@ -53,40 +57,12 @@ function sleep(ms:number) {
     setTimeout(resolve, ms);
   });
 }
-async function addr(node: string) {
+
+async function addr(node:string) {
   try {
     return await resolver.addr(node);
   } catch (e) {
     console.log(`*** resolver.addr error: ${e.message}`);
-    if (e.errorName === 'OffchainLookup') {
-      const url = e.errorArgs[2];
-      const iface = new ethers.utils.Interface(abi);
-      const data = iface.encodeFunctionData('addr', [node]);
-      const body = {
-        jsonrpc: '2.0',
-        method: 'durin_call',
-        params: [{ to: RESOLVER_STUB_ADDRESS, data }],
-        id: 1,
-      };
-      const result = await (
-        await nodeFetch(url, {
-          method: 'post',
-          body: JSON.stringify(body),
-          headers: { 'Content-Type': 'application/json' },
-        })
-      ).json();
-      try{
-        const outputdata = await provider.call({
-          to: RESOLVER_STUB_ADDRESS,
-          data: result && result.result,
-        });
-        return iface.decodeFunctionResult('addrWithProof', outputdata);  
-      }catch(ee){
-        console.log(`*** resolver.addrWithProof error: ${ee.message}`);
-      }
-    } else {
-      console.log(e);
-    }
   }
 }
 
