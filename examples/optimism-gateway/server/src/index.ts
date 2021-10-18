@@ -3,13 +3,25 @@ import { MerkleTree } from 'merkletreejs'
 import { OptimismResolverStub__factory } from './contracts/factories/OptimismResolverStub__factory';
 import { loadContract, loadContractFromManager } from '@eth-optimism/contracts';
 import { RLP } from 'ethers/lib/utils';
+require('dotenv').config({ path: '../contracts/.env' });
 const durin = require('@ensdomains/durin');
 const abi = require('../abis/OptimismResolverStub.json')
 // Instantiate the ethers provider
-const L1_PROVIDER_URL = "http://localhost:9545/";
-const l1_provider = new ethers.providers.JsonRpcProvider(L1_PROVIDER_URL);
+let L1_PROVIDER_URL, L2_PROVIDER_URL
+const {
+  NETWORK,
+  INFURA_API_KEY
+} = process.env;
 
-const L2_PROVIDER_URL = "http://localhost:8545/";
+if(NETWORK === 'kovan'){
+  L1_PROVIDER_URL = `https://rinkeby.infura.io/v3/${INFURA_API_KEY}`
+  L2_PROVIDER_URL = 'https://kovan.optimism.io'
+}else{
+  L1_PROVIDER_URL = "http://localhost:9545/";
+  L2_PROVIDER_URL = "http://localhost:8545/";
+}
+console.log({L1_PROVIDER_URL, L2_PROVIDER_URL})
+const l1_provider = new ethers.providers.JsonRpcProvider(L1_PROVIDER_URL);
 const l2_provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
 
 const ADDRESS_MANAGER_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
