@@ -154,7 +154,7 @@ export class Server {
 
     try {
       res.json(await this.call(req.body));
-    } catch (e: any) {
+    } catch (e) {
       res.json({
         jobRunID: req.body.id,
         statusCode: 500,
