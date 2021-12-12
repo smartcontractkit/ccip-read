@@ -1,32 +1,55 @@
 import cors from 'cors';
-import { BytesLike, ethers } from 'ethers';
+import { ethers, BytesLike } from 'ethers';
 import { Fragment, FunctionFragment, Interface, JsonFragment } from '@ethersproject/abi';
-import { concat, hexlify } from '@ethersproject/bytes';
+import { hexlify } from '@ethersproject/bytes';
 import express from 'express';
-import jayson from 'jayson/promise';
-import { TransactionRequest } from '@ethersproject/abstract-provider';
+
+interface RPCCall {
+  id: string;
+  data: {
+    to: BytesLike;
+    data: BytesLike;
+  }
+}
+
+interface RPCResponseBase {
+  jobRunID: string;
+  statusCode: number;
+}
+
+interface RPCSuccessResponse extends RPCResponseBase {
+  statusCode: 200;
+  data: {
+    result: BytesLike;
+  }
+}
+
+interface RPCClientErrorResponse extends RPCResponseBase {
+  statusCode: 400 | 404;
+  error: {
+    name: string;
+    message: string;
+  }
+}
+
+interface RPCServerErrorResponse extends RPCResponseBase {
+  statusCode: 400;
+  error: {
+    name: string;
+    message: string;
+  }
+}
+
+type RPCResponse = RPCSuccessResponse | RPCClientErrorResponse | RPCServerErrorResponse;
+
 export type HandlerFunc = (
   args: ethers.utils.Result,
-  context: TransactionRequest[]
+  req?: RPCCall
 ) => Promise<Array<any>> | Array<any>;
 
 interface Handler {
-  calltype: FunctionFragment;
-  returntype: FunctionFragment;
+  type: FunctionFragment;
   func: HandlerFunc;
-}
-
-function typematch(a: ethers.utils.ParamType[] | undefined, b: ethers.utils.ParamType[] | undefined): boolean {
-  if (a === undefined && b === undefined) {
-    return true;
-  }
-  if (a === undefined || b === undefined) {
-    return false;
-  }
-  if (a.length !== b.length) {
-    return false;
-  }
-  return a.every((value, index) => value.type === b[index].type);
 }
 
 function toInterface(abi: string | readonly (string | Fragment | JsonFragment)[] | Interface) {
@@ -36,16 +59,13 @@ function toInterface(abi: string | readonly (string | Fragment | JsonFragment)[]
   return new Interface(abi);
 }
 
+function isRPCCall(x: any): x is RPCCall {
+  return x.id !== undefined && x.data !== undefined && x.data.to !== undefined && x.data.data !== undefined;
+}
+
 export interface HandlerDescription {
-  calltype: string;
-  returntype: string;
+  type: string;
   func: HandlerFunc;
-  options?: {
-    /* If true, don't check that the return types of `calltype` and `returntype` match.
-     * Useful for return functions that have dynamically determined return types.
-     */
-    ignoreReturnTypeMismatch?: boolean;
-  };
 }
 
 /**
@@ -53,78 +73,53 @@ export interface HandlerDescription {
  *
  * Example usage:
  * ```javascript
- * const durin = require('durin');
- * const server = new durin.Server();
+ * const ccipread = require('ccip-read');
+ * const server = new ccipread.Server();
  * const abi = [
- *   'function balanceOf(address addr) public returns(uint256)',
- *   'function balanceOfWithProof(address addr, uint256 balance, bytes proof) public returns(uint256)',
+ *   'function getSignedBalance(address addr) public view returns(uint256 balance, bytes memory sig)',
  * ];
  * server.add(abi, [
  *   {
- *     calltype: 'balanceOf',
- *     returntype: 'balanceOfWithProof',
+ *     type: 'getSignedBalance',
  *     func: async (contractAddress, [addr]) => {
  *       const balance = getBalance(addr);
  *       const sig = signMessage([addr, balance]);
- *       return [addr, balance, sig];
+ *       return [balance, sig];
  *     }
  *   }
- * ], '0x...');
+ * ]);
  * const app = server.makeApp();
  * app.listen(8080);
  * ```
- *
- * Notice `.add()` specifies the function being implemented (`balanceOf`) and the verification
- * function it returns encoded calldata for (`balanceOfWithProof`), and the handler function
- * returns arguments matching the input arguments of `balanceOfWithProof`.
  */
 export class Server {
   /** @ignore */
-  readonly handlers: { [address: string]: { [selector: string]: Handler } };
-  /** A `jayson.Server` object that implements the required Durin endpoints */
-  readonly server: jayson.Server;
+  readonly handlers: { [selector: string]: Handler };
 
   /**
    * Constructs a new Durin gateway server instance.
    */
   constructor() {
     this.handlers = {};
-    this.server = new jayson.Server({
-      durin_call: this.call.bind(this),
-    });
   }
 
   /**
    * Adds an interface to the gateway server, with handlers to handle some or all of its functions.
    * @param abi The contract ABI to use. This can be in any format that ethers.js recognises, including
    *        a 'Human Readable ABI', a JSON-format ABI, or an Ethers `Interface` object.
-   * @param handlers An object describing the handlers to register against this interface.
-   * @param address The address of the contract. If omitted, the handler will be called for matching
-   *        function calls on any address.
-   * @returns An [[InterfaceBuilder]] object that can be used to register handler functions for this interface.
+   * @param handlers An array of handlers to register against this interface.
    */
   add(
     abi: string | readonly (string | Fragment | JsonFragment)[] | Interface,
-    handlers: Array<HandlerDescription>,
-    address?: string
+    handlers: Array<HandlerDescription>
   ) {
     const abiInterface = toInterface(abi);
 
-    if (this.handlers[address || ''] !== undefined) {
-      throw new Error(`Interface for address ${address} already defined`);
-    }
-    const handlersForAddress: { [key: string]: Handler } = (this.handlers[address || ''] = {});
-
     for (const handler of handlers) {
-      const callfunc = abiInterface.getFunction(handler.calltype);
-      const returnfunc = abiInterface.getFunction(handler.returntype);
-      if (!handler.options?.ignoreReturnTypeMismatch && !typematch(callfunc.outputs, returnfunc.outputs)) {
-        throw new Error(`Return types of ${handler.calltype} and ${handler.returntype} do not match`);
-      }
+      const fn = abiInterface.getFunction(handler.type);
 
-      handlersForAddress[Interface.getSighash(callfunc)] = {
-        calltype: callfunc,
-        returntype: returnfunc,
+      this.handlers[Interface.getSighash(fn)] = {
+        type: fn,
         func: handler.func,
       };
     }
@@ -134,8 +129,8 @@ export class Server {
    * Convenience function to construct an `express` application object for the gateway.
    * Example usage:
    * ```javascript
-   * const durin = require('durin');
-   * const server = new durin.Server();
+   * const ccipread = require('ccip-read');
+   * const server = new ccipread.Server();
    * // set up server object here
    * const app = server.makeApp();
    * app.serve(8080);
@@ -146,39 +141,68 @@ export class Server {
     const app = express();
     app.use(cors());
     app.use(express.json());
-    app.use(path, this.server.middleware());
+    app.post(path, this.handleRequest.bind(this));
     return app;
   }
 
-  getHandler(to: string, sighash: string): Handler | undefined {
-    return (this.handlers[to] || this.handlers[''])?.[sighash];
+  async handleRequest(req: express.Request, res: express.Response) {
+    if(!isRPCCall(req.body)) {
+      res.json({
+        jobRunID: req.body.id || "1",
+        statusCode: 400,
+        error: {
+          name: "InvalidRequest",
+          message: "Invalid request format"
+        }
+      });
+      return;
+    }
+
+    try {
+      res.json(await this.call(req.body));
+    } catch(e:any) {
+      res.json({
+        jobRunID: req.body.id,
+        statusCode: 500,
+        error: {
+          name: "InternalError",
+          message: `Internal server error: ${e.toString()}`
+        }
+      });
+    }
   }
 
-  async call(contextArgs: TransactionRequest[]): Promise<any> {
-    const context = contextArgs[0];
+  async call(req: RPCCall): Promise<RPCResponse> {
     // Get the function selector
-    const data = ethers.utils.hexlify(context.data as BytesLike);
-    const to = ethers.utils.hexlify(context.to as BytesLike);
+    const data = ethers.utils.hexlify(req.data.data);
     const selector = data.slice(0, 10).toLowerCase();
 
     // Find a function handler for this selector
-    const handler = this.getHandler(to, selector);
+    const handler = this.handlers[selector];
     if (handler === undefined) {
-      throw new Error('No matching function handler');
+      return {
+        jobRunID: req.id,
+        statusCode: 404,
+        error: {
+          name: "FunctionNotFound",
+          message: `No implementation for function with selector ${selector}`
+        }
+      };
     }
 
     // Decode function arguments
-    const args = ethers.utils.defaultAbiCoder.decode(handler.calltype.inputs, '0x' + data.slice(10));
+    const args = ethers.utils.defaultAbiCoder.decode(handler.type.inputs, '0x' + data.slice(10));
 
     // Call the handler
-    const result = await handler.func(args, [context]);
+    const result = await handler.func(args, req);
 
     // Encode return data
-    return hexlify(
-      concat([
-        Interface.getSighash(handler.returntype),
-        ethers.utils.defaultAbiCoder.encode(handler.returntype.inputs, result),
-      ])
-    );
+    return {
+      jobRunID: req.id,
+      statusCode: 200,
+      data: {
+        result: handler.type.outputs ? hexlify(ethers.utils.defaultAbiCoder.encode(handler.type.outputs, result)) : "0x",
+      }
+    };
   }
 }
