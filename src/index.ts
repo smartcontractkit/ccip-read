@@ -160,7 +160,7 @@ export class Server {
         statusCode: 500,
         error: {
           name: 'InternalError',
-          message: `Internal server error: ${e.toString()}`,
+          message: `Internal server error: ${(e as any).toString()}`,
         },
       });
     }
