@@ -9,7 +9,7 @@ interface RPCCall {
   data: {
     to: BytesLike;
     data: BytesLike;
-  }
+  };
 }
 
 interface RPCResponseBase {
@@ -21,7 +21,7 @@ interface RPCSuccessResponse extends RPCResponseBase {
   statusCode: 200;
   data: {
     result: BytesLike;
-  }
+  };
 }
 
 interface RPCClientErrorResponse extends RPCResponseBase {
@@ -29,7 +29,7 @@ interface RPCClientErrorResponse extends RPCResponseBase {
   error: {
     name: string;
     message: string;
-  }
+  };
 }
 
 interface RPCServerErrorResponse extends RPCResponseBase {
@@ -37,15 +37,12 @@ interface RPCServerErrorResponse extends RPCResponseBase {
   error: {
     name: string;
     message: string;
-  }
+  };
 }
 
 type RPCResponse = RPCSuccessResponse | RPCClientErrorResponse | RPCServerErrorResponse;
 
-export type HandlerFunc = (
-  args: ethers.utils.Result,
-  req?: RPCCall
-) => Promise<Array<any>> | Array<any>;
+export type HandlerFunc = (args: ethers.utils.Result, req?: RPCCall) => Promise<Array<any>> | Array<any>;
 
 interface Handler {
   type: FunctionFragment;
@@ -109,10 +106,7 @@ export class Server {
    *        a 'Human Readable ABI', a JSON-format ABI, or an Ethers `Interface` object.
    * @param handlers An array of handlers to register against this interface.
    */
-  add(
-    abi: string | readonly (string | Fragment | JsonFragment)[] | Interface,
-    handlers: Array<HandlerDescription>
-  ) {
+  add(abi: string | readonly (string | Fragment | JsonFragment)[] | Interface, handlers: Array<HandlerDescription>) {
     const abiInterface = toInterface(abi);
 
     for (const handler of handlers) {
@@ -146,28 +140,28 @@ export class Server {
   }
 
   async handleRequest(req: express.Request, res: express.Response) {
-    if(!isRPCCall(req.body)) {
+    if (!isRPCCall(req.body)) {
       res.json({
-        jobRunID: req.body.id || "1",
+        jobRunID: req.body.id || '1',
         statusCode: 400,
         error: {
-          name: "InvalidRequest",
-          message: "Invalid request format"
-        }
+          name: 'InvalidRequest',
+          message: 'Invalid request format',
+        },
       });
       return;
     }
 
     try {
       res.json(await this.call(req.body));
-    } catch(e:any) {
+    } catch (e: any) {
       res.json({
         jobRunID: req.body.id,
         statusCode: 500,
         error: {
-          name: "InternalError",
-          message: `Internal server error: ${e.toString()}`
-        }
+          name: 'InternalError',
+          message: `Internal server error: ${e.toString()}`,
+        },
       });
     }
   }
@@ -184,9 +178,9 @@ export class Server {
         jobRunID: req.id,
         statusCode: 404,
         error: {
-          name: "FunctionNotFound",
-          message: `No implementation for function with selector ${selector}`
-        }
+          name: 'FunctionNotFound',
+          message: `No implementation for function with selector ${selector}`,
+        },
       };
     }
 
@@ -201,8 +195,10 @@ export class Server {
       jobRunID: req.id,
       statusCode: 200,
       data: {
-        result: handler.type.outputs ? hexlify(ethers.utils.defaultAbiCoder.encode(handler.type.outputs, result)) : "0x",
-      }
+        result: handler.type.outputs
+          ? hexlify(ethers.utils.defaultAbiCoder.encode(handler.type.outputs, result))
+          : '0x',
+      },
     };
   }
 }
