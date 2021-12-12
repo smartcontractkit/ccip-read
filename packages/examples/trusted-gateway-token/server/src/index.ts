@@ -1,6 +1,6 @@
-const durin = require('@ensdomains/durin');
+const ccipread = require('@smartcontractkit/ccip-read');
 const ethers = require('ethers');
-const server = new durin.Server();
+const server = new ccipread.Server();
 const fs = require('fs');
 require('dotenv').config({ path: '../.env' });
 const abi = JSON.parse(

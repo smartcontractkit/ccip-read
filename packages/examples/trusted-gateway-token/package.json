@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "description": "A protocol for contract-initiated offchain data retrieval",
+    "engines": {
+        "node": ">=14"
+    },
+    "scripts": {
+        "preinstall": "for d in client contracts server; do cd $d; echo $(pwd); yarn install || exit; cd -; done",
+        "test": "for d in client contracts server; do cd $d; yarn test || exit; cd -; done",
+        "lint": "for d in client contracts server; do cd $d; yarn lint || exit; cd -; done",
+        "build": "for d in client contracts server; do cd $d; yarn build || exit; cd -; done",
+        "clean": "rm -fr node_modules; for d in client contracts server; do cd $d; yarn clean || exit; cd -; done"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/smartcontractkit/ccip-read.js.git"
+    },
+    "author": "@smartcontractkit",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/smartcontractkit/ccip-read/issues"
+    },
+    "peerDependencies": {},
+    "homepage": "https://github.com/smartcontractkit/ccip-read#readme"
+}
