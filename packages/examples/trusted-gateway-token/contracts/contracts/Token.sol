@@ -55,7 +55,7 @@ contract Token is ERC20, Ownable {
       revert OffchainLookup(
         address(this),
         url,
-        abi.encode(addr),
+        abi.encodeWithSelector(Gateway.getSignedBalance.selector, addr),
         Token.balanceOfWithSig.selector,
         abi.encode(addr)
       );
@@ -69,9 +69,9 @@ contract Token is ERC20, Ownable {
       revert OffchainLookup(
         address(this),
         url,
-        abi.encode(recipient, amount),
+        abi.encodeWithSelector(Gateway.getSignedBalance.selector, recipient),
         Token.transferWithSig.selector,
-        abi.encode(recipient)
+        abi.encode(recipient, amount)
       );
     }
     return true;
