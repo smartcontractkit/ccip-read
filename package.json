@@ -5,14 +5,15 @@
     "engines": {
         "node": ">=14"
     },
+    "subpackages": "server examples",
     "scripts": {
         "prepare": "husky install",
-        "preinstall": "for d in packages/server packages/examples; do cd $d; yarn install || exit; cd -; done",
-        "test": "for d in packages/server packages/examples; do cd $d; yarn test || exit; cd -; done",
-        "lint": "for d in packages/server packages/examples; do cd $d; yarn lint || exit; cd -; done",
-        "build": "for d in packages/server packages/examples; do cd $d; yarn build || exit; cd -; done",
-        "docs": "for d in packages/server packages/examples; do cd $d; yarn docs || exit; cd -; done",
-        "clean": "for d in packages/server packages/examples; do cd $d; yarn clean || exit; cd -; done"
+        "preinstall": "run(){ for d in $npm_package_subpackages; do cd packages/$d; yarn install $* || exit; cd -; done; }; run",
+        "test": "run(){ for d in $npm_package_subpackages; do cd packages/$d; yarn test $* || exit; cd -; done; }; run",
+        "lint": "run(){ for d in $npm_package_subpackages; do cd packages/$d; yarn lint $* || exit; cd -; done; }; run",
+        "build": "run(){ for d in $npm_package_subpackages; do cd packages/$d; yarn build $* || exit; cd -; done; }; run",
+        "docs": "run(){ for d in $npm_package_subpackages; do cd packages/$d; yarn docs $* || exit; cd -; done; }; run",
+        "clean": "run(){ for d in $npm_package_subpackages; do cd packages/$d; yarn clean $* || exit; cd -; done; }; run"
     },
     "repository": {
         "type": "git",

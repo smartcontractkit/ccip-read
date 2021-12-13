@@ -4,12 +4,13 @@
     "engines": {
         "node": ">=14"
     },
+    "subpackages": "contracts server client",
     "scripts": {
-        "preinstall": "for d in client contracts server; do cd $d; echo $(pwd); yarn install || exit; cd -; done",
-        "test": "for d in client contracts server; do cd $d; yarn test || exit; cd -; done",
-        "lint": "for d in client contracts server; do cd $d; yarn lint || exit; cd -; done",
-        "build": "for d in client contracts server; do cd $d; yarn build || exit; cd -; done",
-        "clean": "rm -fr node_modules; for d in client contracts server; do cd $d; yarn clean || exit; cd -; done"
+        "preinstall": "run(){ for d in $npm_package_subpackages; do cd $d; yarn install $* || exit; cd -; done; }; run",
+        "test": "run(){ for d in $npm_package_subpackages; do cd $d; yarn test $* || exit; cd -; done; }; run",
+        "lint": "run(){ for d in $npm_package_subpackages; do cd $d; yarn lint $* || exit; cd -; done; }; run",
+        "build": "run(){ for d in $npm_package_subpackages; do cd $d; yarn build $* || exit; cd -; done; }; run",
+        "clean": "run(){ for d in $npm_package_subpackages; do cd $d; yarn clean $* || exit; cd -; done; }; run"
     },
     "repository": {
         "type": "git",

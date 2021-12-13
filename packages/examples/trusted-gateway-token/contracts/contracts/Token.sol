@@ -1,10 +1,16 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
-import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+
+interface Gateway {
+  function getSignedBalance(address addr) external view returns(uint256 balance, bytes memory sig);
+}
+
+error OffchainLookup(address sender, string url, bytes callData, bytes4 callbackFunction, bytes extraData);
+
 /**
  * @title Token
  * @dev Very simple ERC20 Token example, where all tokens are pre-assigned to the creator.
@@ -18,11 +24,6 @@ contract Token is ERC20, Ownable {
   string public url;
   address private _signer;
   mapping(address=>bool) claimed;
-  error OffchainLookup(string url, bytes prefix);
-  struct BalanceProof {
-    bytes signature;
-    uint balance;
-  }
 
   /**
     * @dev Constructor that gives msg.sender all of existing tokens.
@@ -50,9 +51,13 @@ contract Token is ERC20, Ownable {
   function balanceOf(address addr) public override view returns(uint balance) {
     if(claimed[addr]){
       return super.balanceOf(addr);
-    }else{
-      revert OffchainLookup(url,
-        abi.encodeWithSignature("balanceOfWithProof(address addr, BalanceProof memory proof)", addr)
+    } else {
+      revert OffchainLookup(
+        address(this),
+        url,
+        abi.encode(addr),
+        Token.balanceOfWithSig.selector,
+        abi.encode(addr)
       );
     }
   }
@@ -60,39 +65,48 @@ contract Token is ERC20, Ownable {
   function transfer(address recipient, uint256 amount) public override returns (bool) {
     if(claimed[msg.sender]){
       _transfer(msg.sender, recipient, amount);
-    }else{
-      revert OffchainLookup(url, abi.encodeWithSelector(Token.transferWithProof.selector, recipient, amount));
+    } else {
+      revert OffchainLookup(
+        address(this),
+        url,
+        abi.encode(recipient, amount),
+        Token.transferWithSig.selector,
+        abi.encode(recipient)
+      );
     }
     return true;
   }
 
-  function balanceOfWithProof(address addr, BalanceProof memory proof) public view returns(uint) {
+  function balanceOfWithSig(bytes calldata result, bytes calldata extraData) external view returns(uint) {
+    (address addr) = abi.decode(extraData, (address));
+    
     uint balance = super.balanceOf(addr);
-    return balance + _balanceOfWithProof(addr, proof);
+    return balance + _getBalance(addr, result);
   }
 
-  function _balanceOfWithProof(address addr, BalanceProof memory proof) public view returns(uint) {
-    if(claimed[addr]){
-      return 0;
-    }else{
-      address recovered = keccak256(
-        abi.encodePacked("\x19Ethereum Signed Message:\n32",
-        keccak256(abi.encodePacked(proof.balance, addr))
-      )).recover(proof.signature);
-
-      require(_signer == recovered, "Signer is not the signer of the token");
-      return proof.balance;
-    }
-  }
-
-  function transferWithProof(address recipient, uint256 amount, BalanceProof memory proof) external returns(bool) {
-    uint l1Balance = super.balanceOf(msg.sender);
-    uint l2Balance = _balanceOfWithProof(msg.sender, proof);
-    uint diff = l2Balance - l1Balance;
-    claimed[msg.sender] = true;
-    if(diff > 0){
-      _mint(msg.sender, diff);
+  function transferWithSig(bytes calldata result, bytes calldata extraData) external returns(bool) {
+    (address recipient, uint256 amount) = abi.decode(extraData, (address, uint256));
+    uint offchainBalance = _getBalance(msg.sender, result);
+    if(offchainBalance > 0) {
+      claimed[msg.sender] = true;
+      _mint(msg.sender, offchainBalance);
     }
     _transfer(msg.sender, recipient, amount);
+    return true;
+  }
+
+  function _getBalance(address addr, bytes memory result) public view returns(uint) {
+    (uint256 balance, bytes memory sig) = abi.decode(result, (uint256, bytes));
+    if(claimed[addr]) {
+      return 0;
+    } else {
+      address recovered = keccak256(
+        abi.encodePacked("\x19Ethereum Signed Message:\n32",
+        keccak256(abi.encodePacked(balance, addr))
+      )).recover(sig);
+
+      require(_signer == recovered, "Signer is not the signer of the token");
+      return balance;
+    }
   }
 }

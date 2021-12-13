@@ -1,25 +1,21 @@
 const nodeFetch = require('node-fetch');
 const ethers = require('ethers');
-require('dotenv').config({ path: '../.env' });
 const fs = require('fs');
+require('dotenv').config({ path: '../.env' });
+
 const abi = JSON.parse(
   fs.readFileSync(
     '../contracts/artifacts/contracts/Token.sol/Token.json',
     'utf8'
   )
 ).abi;
-const { TOKEN_ADDRESS, PROVIDER_URL, SENDER_PRIVATE_KEY } = process.env;
 const RECIPIENT = '0x8626f6940e2eb28930efb4cef49b2d1f2c9c1199';
-
+const { TOKEN_ADDRESS, PROVIDER_URL, SENDER_PRIVATE_KEY } = process.env;
 const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
 const signer = new ethers.Wallet(SENDER_PRIVATE_KEY);
-
 const erc20 = new ethers.Contract(TOKEN_ADDRESS, abi, provider);
 const SENDER_ADDRESS = signer.address;
-console.log({
-  TOKEN_ADDRESS,
-  SENDER_ADDRESS,
-});
+
 async function getBalance(address: string) {
   try {
     return await erc20.balanceOf(address);

@@ -5,13 +5,14 @@
     "engines": {
         "node": ">=14"
     },
+    "subpackages": "trusted-gateway-token",
     "scripts": {
-        "preinstall": "for d in trusted-gateway-token; do cd $d; echo $(pwd); yarn install || exit; cd -; done",
-        "test": "for d in trusted-gateway-token; do cd $d; yarn test || exit; cd -; done",
-        "lint": "for d in trusted-gateway-token; do cd $d; yarn lint || exit; cd -; done",
-        "build": "for d in trusted-gateway-token; do cd $d; yarn build || exit; cd -; done",
+        "preinstall": "run(){ for d in $npm_package_subpackages; do cd $d; yarn install $* || exit; cd -; done; }; run",
+        "test": "run(){ for d in $npm_package_subpackages; do cd $d; yarn test $* || exit; cd -; done; }; run",
+        "lint": "run(){ for d in $npm_package_subpackages; do cd $d; yarn lint $* || exit; cd -; done; }; run",
+        "build": "run(){ for d in $npm_package_subpackages; do cd $d; yarn build $* || exit; cd -; done; }; run",
         "docs": "true",
-        "clean": "rm -fr node_modules; for d in trusted-gateway-token; do cd $d; yarn clean || exit; cd -; done"
+        "clean": "run(){ for d in $npm_package_subpackages; do cd $d; yarn clean $* || exit; cd -; done; }; run"
     },
     "repository": {
         "type": "git",

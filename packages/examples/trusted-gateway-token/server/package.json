@@ -18,6 +18,7 @@
     "prepare": "tsdx build",
     "size": "size-limit",
     "analyze": "size-limit --why",
+    "format": "prettier --write \"./src/*.{js,ts}\" \"tests/*.{js,ts}\"",
     "clean": "rm -fr dist node_modules"
   },
   "peerDependencies": {},
@@ -47,8 +48,15 @@
   ],
   "devDependencies": {
     "@size-limit/preset-small-lib": "^5.0.2",
+    "@types/chai": "^4.3.0",
+    "@types/express": "^4.17.13",
+    "@types/mocha": "^9.0.0",
+    "@types/supertest": "^2.0.11",
+    "chai": "^4.3.4",
+    "express": "^4.17.1",
     "husky": "^7.0.1",
     "size-limit": "^5.0.2",
+    "supertest": "^6.1.6",
     "tsdx": "^0.14.1",
     "tslib": "^2.3.0",
     "typescript": "^4.3.5"

@@ -1,4 +1,7 @@
 const { expect } = require("chai");
+const { ethers } = require("hardhat");
+
+const abiCoder = ethers.utils.defaultAbiCoder;
 
 async function generateProof(signer, balance, address){
   const messageHash = ethers.utils.solidityKeccak256(
@@ -6,11 +9,7 @@ async function generateProof(signer, balance, address){
   );
   const messageHashBinary = ethers.utils.arrayify(messageHash);
   const signature = await signer.signMessage(messageHashBinary);
-  const proof = {
-    signature,
-    balance
-  };
-  return proof;
+  return abiCoder.encode(['uint256', 'bytes'], [balance, signature]);
 }
 
 describe("Token", function () {
@@ -53,10 +52,10 @@ describe("Token", function () {
     }
   })
 
-  it("balanceOfWithProof", async function (){
+  it("balanceOfWithSig", async function (){
     const balance = 2
-    proof = await generateProof(tokensigner, balance, account2.address)
-    let newBalance = await token.balanceOfWithProof(account2.address, proof)
+    const proof = await generateProof(tokensigner, balance, account2.address)
+    let newBalance = await token.balanceOfWithSig(proof, abiCoder.encode(['address'], [account2.address]));
     expect(newBalance).to.equal(balance);
   })
 
@@ -69,7 +68,7 @@ describe("Token", function () {
     }
   })
 
-  it("transferWithProof transfers to recipient", async function (){
+  it("transferWithSig transfers to recipient", async function (){
     let recipient = signers[5]
     let token2 = token.connect(account2)
     try {
@@ -80,9 +79,9 @@ describe("Token", function () {
     }
     const balance = 2
     proof = await generateProof(tokensigner, balance, account2.address)
-    await token2.transferWithProof(recipient.address, balance, proof)
-    const zeroProof = await generateProof(tokensigner, 0, recipient.address)
-    const newBalance = await token.balanceOfWithProof(recipient.address, zeroProof);
+    await token2.transferWithSig(proof, abiCoder.encode(['address', 'uint256'], [recipient.address, balance]));
+    const zeroProof = await generateProof(tokensigner, 0, recipient.address);
+    const newBalance = await token.balanceOfWithSig(zeroProof, abiCoder.encode(['address'], [recipient.address]));
     expect(newBalance).to.equal(balance);
   })
 });
