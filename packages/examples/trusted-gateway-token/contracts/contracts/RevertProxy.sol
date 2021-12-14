@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-interface Token {
+interface IToken {
     function balanceOf(address owner) external view returns(uint256);
 }
 
@@ -14,7 +14,7 @@ contract RevertProxy {
     }
 
     // Utility function to test passing through reverts from another contract.
-    function balanceOf(Token token, address owner) external view returns(uint256) {
+    function balanceOf(IToken token, address owner) external view returns(uint256) {
         return token.balanceOf(owner);
     }
 }
