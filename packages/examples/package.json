@@ -11,7 +11,6 @@
         "test": "run(){ for d in $npm_package_subpackages; do cd $d; yarn test $* || exit; cd -; done; }; run",
         "lint": "run(){ for d in $npm_package_subpackages; do cd $d; yarn lint $* || exit; cd -; done; }; run",
         "build": "run(){ for d in $npm_package_subpackages; do cd $d; yarn build $* || exit; cd -; done; }; run",
-        "docs": "true",
         "clean": "run(){ for d in $npm_package_subpackages; do cd $d; yarn clean $* || exit; cd -; done; }; run"
     },
     "repository": {

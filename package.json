@@ -12,8 +12,8 @@
         "test": "run(){ for d in $npm_package_subpackages; do cd packages/$d; yarn test $* || exit; cd -; done; }; run",
         "lint": "run(){ for d in $npm_package_subpackages; do cd packages/$d; yarn lint $* || exit; cd -; done; }; run",
         "build": "run(){ for d in $npm_package_subpackages; do cd packages/$d; yarn build $* || exit; cd -; done; }; run",
-        "docs": "run(){ for d in $npm_package_subpackages; do cd packages/$d; yarn docs $* || exit; cd -; done; }; run",
-        "clean": "run(){ for d in $npm_package_subpackages; do cd packages/$d; yarn clean $* || exit; cd -; done; }; run"
+        "docs": "typedoc --entryPointStrategy packages packages/server packages/ethers-ccip-read-provider",
+        "clean": "rm -fr node_modules; run(){ for d in $npm_package_subpackages; do cd packages/$d; yarn clean $* || exit; cd -; done; }; run"
     },
     "repository": {
         "type": "git",
@@ -27,8 +27,9 @@
     "peerDependencies": {},
     "homepage": "https://github.com/smartcontractkit/ccip-read#readme",
     "devDependencies": {
-        "husky": "^6.0.0"
+        "husky": "^6.0.0",
+        "typedoc": "^0.22.10",
+        "typescript": "^4.5.4"
     },
-    "dependencies": {
-    }
+    "dependencies": {}
 }
