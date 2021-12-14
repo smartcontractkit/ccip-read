@@ -9,12 +9,29 @@ const logger = new Logger('0.1.0');
 const OFFCHAIN_LOOKUP_TYPE = ['address', 'string', 'bytes', 'bytes4', 'bytes'];
 const CALLBACK_TYPE = ['bytes', 'bytes'];
 
-export type Fetch = (connection: string, json?: string) => Promise<any>;
+export type Fetch = (url: string, json?: string) => Promise<any>;
 
+/**
+ * Ethers provider middleware that implements the offchain call pattern from EIP 3668.
+ * Simply wrap your regular Ethers provider in this and CCIP-read operations will be
+ * handled transparently.
+ * 
+ * Example usage:
+ * ```javascript
+ * const outerProvider = new ethers.providers.JsonRpcProvider('http://localhost:8545/');
+ * const provider = new CCIPReadProvider(outerProvier);
+ * const contract = new ethers.Contract(address, abi, provider);
+ * const result = await contract.someFunc(...);
+ * ```
+ */
 export class CCIPReadProvider extends BaseProvider {
     readonly parent: BaseProvider;
     readonly fetcher: Fetch;
 
+    /**
+     * Constructor.
+     * @param provider: The Ethers provider to wrap.
+     */
     constructor(provider: BaseProvider, fetcher: Fetch = fetchJson) {
         super(provider.getNetwork());
         this.parent = provider;
