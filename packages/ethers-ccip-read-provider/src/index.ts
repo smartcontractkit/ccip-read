@@ -1,4 +1,4 @@
-import { defaultAbiCoder } from '@ethersproject/abi';
+import { defaultAbiCoder, Interface } from '@ethersproject/abi';
 import { arrayify, BytesLike, hexConcat, hexlify } from '@ethersproject/bytes';
 import { Logger } from '@ethersproject/logger';
 import { BaseProvider, Network } from '@ethersproject/providers';
@@ -6,8 +6,10 @@ import { fetchJson } from '@ethersproject/web';
 
 const logger = new Logger('0.1.0');
 
-const OFFCHAIN_LOOKUP_TYPE = ['address', 'string', 'bytes', 'bytes4', 'bytes'];
-const CALLBACK_TYPE = ['bytes', 'bytes'];
+const CCIP_READ_INTERFACE = new Interface([
+    "error OffchainLookup(address sender, string url, bytes callData, bytes4 callbackFunction, bytes extraData)",
+    "function callback(bytes memory result, bytes memory extraData)"
+]);
 
 export type Fetch = (url: string, json?: string) => Promise<any>;
 
@@ -55,11 +57,11 @@ export class CCIPReadProvider extends BaseProvider {
         const result = await this.parent.perform('call', params);
         const bytes = arrayify(result);
         
-        if(bytes.length % 32 !== 4 || hexlify(bytes.slice(0, 4)) !== "0xd697c627") {
+        if(bytes.length % 32 !== 4 || hexlify(bytes.slice(0, 4)) !== CCIP_READ_INTERFACE.getSighash("OffchainLookup")) {
             return bytes;
         }
 
-        const [sender, url, callData, callbackFunction, extraData] = defaultAbiCoder.decode(OFFCHAIN_LOOKUP_TYPE, bytes.slice(4));
+        const {sender, url, callData, callbackFunction, extraData} = CCIP_READ_INTERFACE.decodeErrorResult("OffchainLookup", bytes);
         if(sender.toLowerCase() !== params.transaction.to.toLowerCase()) {
             return logger.throwError("OffchainLookup thrown in nested scope", Logger.errors.UNSUPPORTED_OPERATION, {
                 to: params.transaction.to,
@@ -71,7 +73,7 @@ export class CCIPReadProvider extends BaseProvider {
             });
         }
         const response = await this.sendRPC(url, params.transaction.to, callData);
-        const data = hexConcat([callbackFunction, defaultAbiCoder.encode(CALLBACK_TYPE, [response, extraData])]);
+        const data = hexConcat([callbackFunction, defaultAbiCoder.encode(CCIP_READ_INTERFACE.getFunction('callback').inputs, [response, extraData])]);
         const request = Object.assign({}, params, {
             transaction: Object.assign({}, params.transaction, {data}),
         });
