@@ -7,7 +7,7 @@ Typical usage would be a gateway server providing data from a database of some k
 
 Example usage:
 ```javascript
-const ccipread = require('ccip-read');
+const ccipread = require('@smartcontractkit/ccip-read-server');
 const server = new ccipread.Server();
 const abi = [
   'function getSignedBalance(address addr) public view returns(uint256 balance, bytes memory sig)',
