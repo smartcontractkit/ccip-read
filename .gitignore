@@ -5,3 +5,4 @@ docs
 .env
 artifacts
 cache
+yarn-error.log
