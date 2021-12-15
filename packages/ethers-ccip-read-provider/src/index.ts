@@ -9,7 +9,7 @@ import { fetchJson } from '@ethersproject/web';
 const logger = new Logger('0.1.0');
 
 const CCIP_READ_INTERFACE = new Interface([
-    "error OffchainLookup(address sender, string url, bytes callData, bytes4 callbackFunction, bytes extraData)",
+    "error OffchainLookup(address sender, string[] urls, bytes callData, bytes4 callbackFunction, bytes extraData)",
     "function callback(bytes memory result, bytes memory extraData)"
 ]);
 
@@ -23,49 +23,57 @@ function hasSigner(obj: any): obj is HasSigner {
     return (obj as unknown as HasSigner).getSigner !== undefined;
 }
 
-async function handleCall(provider: CCIPReadProvider, params: {transaction: TransactionRequest, blockTag?: BlockTag}): Promise<{transaction: TransactionRequest, result: BytesLike}> {
-    const result = await provider.parent.perform('call', params);
-    const bytes = arrayify(result);
-    
-    if(bytes.length % 32 !== 4 || hexlify(bytes.slice(0, 4)) !== CCIP_READ_INTERFACE.getSighash("OffchainLookup")) {
-        return {transaction: params.transaction, result: bytes};
-    }
+async function handleCall(provider: CCIPReadProvider, params: {transaction: TransactionRequest, blockTag?: BlockTag}, maxCalls=4): Promise<{transaction: TransactionRequest, result: BytesLike}> {
+    for(let i = 0; i < maxCalls; i++) {
+        const result = await provider.parent.perform('call', params);
+        const bytes = arrayify(result);
+        
+        if(bytes.length % 32 !== 4 || hexlify(bytes.slice(0, 4)) !== CCIP_READ_INTERFACE.getSighash("OffchainLookup")) {
+            return {transaction: params.transaction, result: bytes};
+        }
 
-    const {sender, url, callData, callbackFunction, extraData} = CCIP_READ_INTERFACE.decodeErrorResult("OffchainLookup", bytes);
-    if(params.transaction.to === undefined || sender.toLowerCase() !== params.transaction.to.toLowerCase()) {
-        return logger.throwError("OffchainLookup thrown in nested scope", Logger.errors.UNSUPPORTED_OPERATION, {
-            to: params.transaction.to,
-            sender,
-            url,
-            callData,
-            callbackFunction,
-            extraData
+        const {sender, urls, callData, callbackFunction, extraData} = CCIP_READ_INTERFACE.decodeErrorResult("OffchainLookup", bytes);
+        if(params.transaction.to === undefined || sender.toLowerCase() !== params.transaction.to.toLowerCase()) {
+            return logger.throwError("OffchainLookup thrown in nested scope", Logger.errors.UNSUPPORTED_OPERATION, {
+                to: params.transaction.to,
+                sender,
+                urls,
+                callData,
+                callbackFunction,
+                extraData
+            });
+        }
+        const response = await sendRPC(provider.fetcher, urls, params.transaction.to, callData);
+        const data = hexConcat([callbackFunction, defaultAbiCoder.encode(CCIP_READ_INTERFACE.getFunction('callback').inputs, [response, extraData])]);
+        params = Object.assign({}, params, {
+            transaction: Object.assign({}, params.transaction, {data}),
         });
     }
-    const response = await sendRPC(provider.fetcher, url, params.transaction.to, callData);
-    const data = hexConcat([callbackFunction, defaultAbiCoder.encode(CCIP_READ_INTERFACE.getFunction('callback').inputs, [response, extraData])]);
-    const request = Object.assign({}, params, {
-        transaction: Object.assign({}, params.transaction, {data}),
-    });
-    return handleCall(provider, request);
+    return logger.throwError("Too many redirects", Logger.errors.TIMEOUT, {to: params.transaction.to});
 }
 
-async function sendRPC(fetcher: Fetch, url: string, to: BytesLike, callData: BytesLike): Promise<BytesLike> {
-    const data = await fetcher(url, JSON.stringify({
-        id: "1",
-        data: {
-            to: hexlify(to),
-            data: hexlify(callData),
+async function sendRPC(fetcher: Fetch, urls: string[], to: BytesLike, callData: BytesLike): Promise<BytesLike> {
+    for(let url of urls) {
+        const data = await fetcher(url, JSON.stringify({
+            id: "1",
+            data: {
+                to: hexlify(to),
+                data: hexlify(callData),
+            }
+        }));
+        if(data.statusCode >= 400 && data.statusCode <= 499) {
+            return logger.throwError("bad response", Logger.errors.SERVER_ERROR, {
+                status: data.statusCode,
+                name: data.error.name,
+                message: data.error.message,
+            })
         }
-    }));
-    if(data.statusCode < 200 || data.statusCode > 299) {
-        return logger.throwError("bad response", Logger.errors.SERVER_ERROR, {
-            status: data.statusCode,
-            name: data.error.name,
-            message: data.error.message,
-        })
+        if(data.statusCode >= 200 && data.statusCode <= 299) {
+            return data.data.result;
+        }
+        logger.warn("Server returned an error", url, to, callData);
     }
-    return data.data.result;
+    return logger.throwError("All gateways returned an error", Logger.errors.SERVER_ERROR, {urls, to, callData});
 }
 
 /**

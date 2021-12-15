@@ -38,9 +38,9 @@ describe("Token", function () {
   })
 
   it("owner sets a url", async function (){
-    const tx = await token.setUrl(url);
+    const tx = await token.setUrls([url]);
     await tx.wait();
-    expect(await token.url()).to.equal(url);
+    expect(await token.urls(0)).to.equal(url);
   })
 
   it("balanceOf throws OffchainLookup error", async function (){

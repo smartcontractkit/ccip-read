@@ -105,7 +105,7 @@ describe('ethers-ccip-read-provider', () => {
 
         const c = await deploySolidity(token, signer, "Test", "TST", 0);
         await c.setSigner(await messageSigner.getAddress());
-        await c.setUrl("http://localhost:8000/");
+        await c.setUrls(["http://localhost:8000/"]);
         contract = c.connect(ccipProvider);
 
         snapshot = await baseProvider.send('evm_snapshot', []);
@@ -139,8 +139,8 @@ describe('ethers-ccip-read-provider', () => {
         });
 
         it('sends regular transactions', async () => {
-            await contract.connect(signer).setUrl("http://localhost:8001/");
-            expect(await contract.url()).to.equal("http://localhost:8001/");
+            await contract.connect(signer).setUrls(["http://localhost:8001/"]);
+            expect(await contract.urls(0)).to.equal("http://localhost:8001/");
         });
 
         it('translates CCIP read transactions', async () => {

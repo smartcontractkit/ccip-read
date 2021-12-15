@@ -9,7 +9,7 @@ interface Gateway {
   function getSignedBalance(address addr) external view returns(uint256 balance, bytes memory sig);
 }
 
-error OffchainLookup(address sender, string url, bytes callData, bytes4 callbackFunction, bytes extraData);
+error OffchainLookup(address sender, string[] urls, bytes callData, bytes4 callbackFunction, bytes extraData);
 
 /**
  * @title Token
@@ -21,7 +21,7 @@ error OffchainLookup(address sender, string url, bytes callData, bytes4 callback
 contract Token is ERC20, Ownable {
   using ECDSA for bytes32;
 
-  string public url;
+  string[] public urls;
   address private _signer;
   mapping(address=>bool) claimed;
 
@@ -36,8 +36,8 @@ contract Token is ERC20, Ownable {
     _mint(msg.sender, initialSupply);
   }
 
-  function setUrl(string memory url_) external onlyOwner{
-    url = url_;
+  function setUrls(string[] memory urls_) external onlyOwner{
+    urls = urls_;
   }
 
   function setSigner(address signer_) external onlyOwner{
@@ -54,7 +54,7 @@ contract Token is ERC20, Ownable {
     } else {
       revert OffchainLookup(
         address(this),
-        url,
+        urls,
         abi.encodeWithSelector(Gateway.getSignedBalance.selector, addr),
         Token.balanceOfWithSig.selector,
         abi.encode(addr)
@@ -68,7 +68,7 @@ contract Token is ERC20, Ownable {
     } else {
       revert OffchainLookup(
         address(this),
-        url,
+        urls,
         abi.encodeWithSelector(Gateway.getSignedBalance.selector, msg.sender),
         Token.transferWithSig.selector,
         abi.encode(recipient, amount)
