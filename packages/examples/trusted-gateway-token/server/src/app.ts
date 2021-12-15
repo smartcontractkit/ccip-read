@@ -21,7 +21,6 @@ const balances = data.reduce((map: any, obj: any) => {
   map[key] = BigNumber.from(val);
   return map;
 }, {});
-console.log(balances);
 
 export function makeApp(privateKey: string, path: string) {
   let signer = new ethers.Wallet(privateKey);
