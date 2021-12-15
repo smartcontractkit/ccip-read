@@ -1,17 +1,19 @@
 import { Server } from '@smartcontractkit/ccip-read-server';
-import { CCIPReadProvider } from '../src';
+import { CCIPReadProvider, CCIPReadSigner } from '../src';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { ethers } from 'ethers';
 import ganache from 'ganache-cli';
-import proxy from 'testcontract/artifacts/contracts/RevertProxy.sol/RevertProxy.json';
+import testUtils from 'testcontract/artifacts/contracts/TestUtils.sol/TestUtils.json';
 import token from 'testcontract/artifacts/contracts/Token.sol/Token.json';
 import { arrayify } from '@ethersproject/bytes';
 import { keccak256 } from '@ethersproject/solidity';
+import { JsonRpcSigner, Web3Provider } from '@ethersproject/providers';
 
 chai.use(chaiAsPromised);
 
 const TEST_PRIVATE_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+const TEST_ACCOUNT = "0x000000000000000000000000000000000000dead";
 
 function deploySolidity(data: any, signer: ethers.Signer, ...args: any[]) {
     const factory = ethers.ContractFactory.fromSolidity(data, signer);
@@ -20,23 +22,32 @@ function deploySolidity(data: any, signer: ethers.Signer, ...args: any[]) {
 
 /**
  * Hack to ensure that revert data gets passed back from test nodes the same way as from real nodes.
- * This middleware wraps all eth_call operations in calls to a stub contract that catches reverts and
- * returns them as regular data.
+ * This middleware catches Ganache's custom revert error and returns it as response data instead.
  */
-class CallProxyMiddleware extends ethers.providers.BaseProvider {
+class RevertNormalisingMiddleware extends ethers.providers.BaseProvider {
     readonly parent: ethers.providers.BaseProvider;
-    readonly proxy: ethers.Contract;
 
-    constructor(provider: ethers.providers.BaseProvider, proxy: ethers.Contract) {
+    constructor(provider: ethers.providers.BaseProvider) {
         super(provider.getNetwork());
         this.parent = provider;
-        this.proxy = proxy;
     }
+
+    getSigner(addressOrIndex?: string | number): JsonRpcSigner {
+        return (this.parent as Web3Provider).getSigner(addressOrIndex);
+    } 
 
     async perform(method: string, params: any): Promise<any> {
         switch(method) {
         case "call":
-            return await this.proxy.callStatic.call(params.transaction.to, params.transaction.data);
+            try {
+                return await this.parent.perform(method, params);
+            } catch(e) {
+                const err = e as any;
+                if(err.hashes !== undefined && err.hashes.length > 0) {
+                    return err.results[err.hashes[0]].return;
+                }
+                throw(e);
+            }
         default:
             const result = await this.parent.perform(method, params);
             return result;
@@ -48,11 +59,11 @@ class CallProxyMiddleware extends ethers.providers.BaseProvider {
     }
 }
 
-describe('CCIPReadProvider', () => {
+describe('ethers-ccip-read-provider', () => {
     const baseProvider = new ethers.providers.Web3Provider(ganache.provider());
     const messageSigner = new ethers.Wallet(TEST_PRIVATE_KEY);
-    let ccipProvider: ethers.providers.BaseProvider;
-    let proxyContract: ethers.Contract;
+    let ccipProvider: CCIPReadProvider;
+    let utilsContract: ethers.Contract;
     let contract: ethers.Contract;
     let account: string;
     let snapshot: number;
@@ -87,13 +98,15 @@ describe('CCIPReadProvider', () => {
         const signer = await baseProvider.getSigner();
         account = await signer.getAddress();
 
-        proxyContract = await deploySolidity(proxy, signer);
-        const proxyMiddleware = new CallProxyMiddleware(baseProvider, proxyContract);
+        const proxyMiddleware = new RevertNormalisingMiddleware(baseProvider);
         ccipProvider = new CCIPReadProvider(proxyMiddleware, fetcher);
 
-        contract = await deploySolidity(token, signer, "Test", "TST", 0);
-        await contract.setSigner(await messageSigner.getAddress());
-        await contract.setUrl("http://localhost:8000/");
+        utilsContract = (await deploySolidity(testUtils, signer)).connect(ccipProvider);
+
+        const c = await deploySolidity(token, signer, "Test", "TST", 0);
+        await c.setSigner(await messageSigner.getAddress());
+        await c.setUrl("http://localhost:8000/");
+        contract = c.connect(ccipProvider);
 
         snapshot = await baseProvider.send('evm_snapshot', []);
     });
@@ -102,18 +115,41 @@ describe('CCIPReadProvider', () => {
         await baseProvider.send('evm_revert', [snapshot]);
     })
 
-    it('passes calls through to the underlying provider', async () => {
-        const network = await baseProvider.getNetwork();
-        expect((await ccipProvider.getNetwork()).chainId).to.equal(network.chainId);
+    describe('CCIPReadProvider', () => {
+        it('passes calls through to the underlying provider', async () => {
+            const network = await baseProvider.getNetwork();
+            expect((await ccipProvider.getNetwork()).chainId).to.equal(network.chainId);
+        });
+
+        it('handles an OffchainLookup', async () => {
+            expect((await contract.connect(ccipProvider).balanceOf(account)).toString())
+                .to.equal("1000000000000000000000");
+        });
+
+        it('throws an error if the OffchainLookup is thrown in a nested scope', async () => {
+            await expect(utilsContract.balanceOf(contract.address, account)).to.be.rejectedWith('OffchainLookup thrown in nested scope');
+        });
     });
 
-    it('handles an OffchainLookup', async () => {
-        expect((await contract.connect(ccipProvider).balanceOf(account)).toString())
-            .to.equal("1000000000000000000000");
-    });
+    describe('CCIPReadSigner', () => {
+        let signer: CCIPReadSigner;
+        
+        beforeAll(async() => {
+            signer = await ccipProvider.getSigner();
+        });
 
-    it('throws an error if the OffchainLookup is thrown in a nested scope', async () => {
-        const c = proxyContract.connect(ccipProvider);
-        await expect(c.balanceOf(contract.address, account)).to.be.rejectedWith('OffchainLookup thrown in nested scope');
+        it('sends regular transactions', async () => {
+            await contract.connect(signer).setUrl("http://localhost:8001/");
+            expect(await contract.url()).to.equal("http://localhost:8001/");
+        });
+
+        it('translates CCIP read transactions', async () => {
+            expect((await contract.connect(signer).balanceOf(account)).toString()).to.equal("1000000000000000000000");
+            const tx = await contract.connect(signer).transfer(TEST_ACCOUNT, "1000000000000000000");
+            const receipt = await tx.wait();
+            expect(receipt.status).to.equal(1);
+            expect((await contract.balanceOf(account)).toString()).to.equal("999000000000000000000");
+            expect((await contract.balanceOf(TEST_ACCOUNT)).toString()).to.equal("1001000000000000000000");
+        });
     });
 });
