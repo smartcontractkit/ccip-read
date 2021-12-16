@@ -1,6 +1,7 @@
-const nodeFetch = require('node-fetch');
 const ethers = require('ethers');
+const ccipread = require('@smartcontractkit/ethers-ccip-read-provider');
 const fs = require('fs');
+
 require('dotenv').config({ path: '../.env' });
 
 const abi = JSON.parse(
@@ -9,107 +10,31 @@ const abi = JSON.parse(
     'utf8'
   )
 ).abi;
+
 const RECIPIENT = '0x8626f6940e2eb28930efb4cef49b2d1f2c9c1199';
-const { TOKEN_ADDRESS, PROVIDER_URL, SENDER_PRIVATE_KEY } = process.env;
-const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
-const signer = new ethers.Wallet(SENDER_PRIVATE_KEY);
-const erc20 = new ethers.Contract(TOKEN_ADDRESS, abi, provider);
-const SENDER_ADDRESS = signer.address;
+const { TOKEN_ADDRESS, PROVIDER_URL, SENDER_ACCOUNT_INDEX } = process.env;
 
-async function getBalance(address: string) {
-  try {
-    return await erc20.balanceOf(address);
-  } catch (e) {
-    if (e.message.match(/OffchainLookup/)) {
-      // Custom error example
-      // OffchainLookup(
-      //  "https://localhost:8080/rpc",
-      //  "0x4961ed120000000000000000000000004627bd7d658ee1474b3f1da1f9ff0bde6b720fcd"
-      // )
-      const url = 'http://localhost:8080/rpc';
-      const iface = new ethers.utils.Interface(abi);
-      const data = iface.encodeFunctionData('balanceOf', [address]);
-      const body = {
-        jsonrpc: '2.0',
-        method: 'durin_call',
-        params: [{ to: TOKEN_ADDRESS, data }],
-        id: 1,
-      };
-
-      const result = await (
-        await nodeFetch(url, {
-          method: 'post',
-          body: JSON.stringify(body),
-          headers: { 'Content-Type': 'application/json' },
-        })
-      ).json();
-      const outputdata = await provider.call({
-        to: TOKEN_ADDRESS,
-        data: result.result,
-      });
-      return iface.decodeFunctionResult('balanceOfWithProof', outputdata);
-    } else {
-      console.log({ e });
-    }
-  }
-}
-
-async function transfer(
-  fromAddress: string,
-  toAddress: string,
-  amount: number
-) {
-  try {
-    await erc20.estimateGas.transfer(toAddress, amount);
-  } catch (e) {
-    if (e.message.match(/OffchainLookup/)) {
-      const url = 'http://localhost:8080/rpc';
-      const iface = new ethers.utils.Interface(abi);
-      const inputdata = iface.encodeFunctionData('transfer', [
-        toAddress,
-        amount,
-      ]);
-      const body = {
-        jsonrpc: '2.0',
-        method: 'durin_call',
-        params: [{ to: TOKEN_ADDRESS, from: fromAddress, data: inputdata }],
-        id: 1,
-      };
-
-      const result: any = await (
-        await nodeFetch(url, {
-          method: 'post',
-          body: JSON.stringify(body),
-          headers: { 'Content-Type': 'application/json' },
-        })
-      ).json();
-      const nonce = await provider.getTransactionCount(signer.address);
-      const signedTransaction = await signer.signTransaction({
-        nonce,
-        gasLimit: 500000,
-        gasPrice: ethers.BigNumber.from('1000000000'),
-        to: TOKEN_ADDRESS,
-        data: result.result,
-      });
-      await provider.sendTransaction(signedTransaction);
-    } else {
-      console.log({ e });
-    }
-  }
-}
+const provider = new ccipread.CCIPReadProvider(
+  new ethers.providers.JsonRpcProvider(PROVIDER_URL)
+);
+const signer = provider.getSigner(parseInt(SENDER_ACCOUNT_INDEX as string));
+const erc20 = new ethers.Contract(TOKEN_ADDRESS, abi, signer);
 
 async function main() {
   const amount = 1;
+  const sender = await signer.getAddress();
+
+  console.log(`SENDER ${sender} balance ${await erc20.balanceOf(sender)}`);
   console.log(
-    `SENDER ${SENDER_ADDRESS} balance ${await getBalance(SENDER_ADDRESS || '')}`
+    `RECIPIENT ${RECIPIENT} balance ${await erc20.balanceOf(RECIPIENT)}`
   );
-  console.log(`RECIPIENT ${RECIPIENT} balance ${await getBalance(RECIPIENT)}`);
-  console.log(`TRANSFER ${amount} from ${SENDER_ADDRESS} to ${RECIPIENT}`);
-  await transfer(SENDER_ADDRESS || '', RECIPIENT, amount);
+  console.log(`TRANSFER ${amount} from ${sender} to ${RECIPIENT}`);
+  const tx = await erc20.transfer(RECIPIENT, amount);
+  await tx.wait();
+  console.log(`SENDER ${sender} balance ${await erc20.balanceOf(sender)}`);
   console.log(
-    `SENDER ${SENDER_ADDRESS} balance ${await getBalance(SENDER_ADDRESS || '')}`
+    `RECIPIENT ${RECIPIENT} balance ${await erc20.balanceOf(RECIPIENT)}`
   );
-  console.log(`RECIPIENT ${RECIPIENT} balance ${await getBalance(RECIPIENT)}`);
 }
 
 main();

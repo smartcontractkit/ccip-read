@@ -21,12 +21,12 @@ async function main() {
   const Token = await hre.ethers.getContractFactory("Token");
   const name = 'Test'
   const symbol = 'TXT'
-  const url = 'http://localhost:8080/rpc'
+  const url = 'http://localhost:8080/'
   const signers = await ethers.getSigners();
   const initial_supply = 0;
   token = await Token.deploy(name, symbol, initial_supply);
   await token.setSigner(signers[0].address)
-  await token.setUrl(url)
+  await token.setUrls([url])
   await token.deployed();
 
   console.log("Token deployed to:", token.address);
