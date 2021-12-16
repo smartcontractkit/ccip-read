@@ -5,7 +5,7 @@
     "engines": {
         "node": ">=14"
     },
-    "subpackages": "server examples",
+    "subpackages": "server ethers-ccip-read-provider examples",
     "scripts": {
         "prepare": "husky install",
         "preinstall": "run(){ for d in $npm_package_subpackages; do cd packages/$d; yarn install $* || exit; cd -; done; }; run",
