@@ -1,11 +1,10 @@
 {
-    "name": "@smartcontractkit/ccip-read-examples",
     "version": "0.2.0",
     "description": "A protocol for contract-initiated offchain data retrieval",
     "engines": {
         "node": ">=14"
     },
-    "subpackages": "trusted-gateway-token optimism-gateway-ens",
+    "subpackages": "contracts server client",
     "scripts": {
         "preinstall": "run(){ for d in $npm_package_subpackages; do cd $d; yarn install $* || exit; cd -; done; }; run",
         "test": "run(){ for d in $npm_package_subpackages; do cd $d; yarn test $* || exit; cd -; done; }; run",

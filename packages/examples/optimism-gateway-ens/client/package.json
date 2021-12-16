@@ -28,7 +28,7 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "name": "trusted-gateway-token-client",
+  "name": "optimism-gateway-ens-client",
   "author": "Makoto Inoue",
   "module": "dist/client.esm.js",
   "size-limit": [
