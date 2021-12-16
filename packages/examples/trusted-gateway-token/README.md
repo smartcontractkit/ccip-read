@@ -32,7 +32,9 @@ Becuase `Token.balanceOf` shows the balance of the both L1 and off chain informa
 ### 1. Clone the repo and copy the .env file
 
 ```
-git clone https://github.com/ensdomains/durin
+git clone https://github.com/smartcontractkit/ccip-read
+cd ccip-read
+yarn install && yarn build
 cd packages/examples/trusted-gateway-token
 cp .env.local .env
 ```
@@ -62,7 +64,6 @@ This will add `TOKEN_ADDRESS` to the .env file
 
 ```
 cd ../server
-yarn
 yarn start
 ```
 
@@ -70,7 +71,6 @@ yarn start
 
 ```
 cd ../client
-yarn
 yarn start
 ```
 
