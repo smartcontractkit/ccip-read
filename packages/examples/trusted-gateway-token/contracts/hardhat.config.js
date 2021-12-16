@@ -25,7 +25,7 @@ module.exports = {
       throwOnCallFailures: false
     },
     localhost: {
-      url: process.env.PROVIDER_URL,
+      url: process.env.PROVIDER_URL || "http://localhost:8545",
     }
   }
 };
