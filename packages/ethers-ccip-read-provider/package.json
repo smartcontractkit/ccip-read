@@ -56,7 +56,6 @@
         "mocha": "^9.0.0",
         "prettier": "^2.3.2",
         "solc": "^0.8.10",
-        "testcontract": "../examples/trusted-gateway-token/contracts",
         "ts-loader": "^9.2.3",
         "ts-node": "^10.0.0",
         "tsdx": "^0.14.1",

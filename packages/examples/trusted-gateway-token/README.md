@@ -34,7 +34,7 @@ Becuase `Token.balanceOf` shows the balance of the both L1 and off chain informa
 ```
 git clone https://github.com/smartcontractkit/ccip-read
 cd ccip-read
-yarn install && yarn build
+yarn install
 cd packages/examples/trusted-gateway-token
 cp .env.local .env
 ```
