@@ -26,7 +26,7 @@ jobs:
         run: yarn lint
 
       - name: Test
-        run: yarn test --ci --coverage --maxWorkers=2
+        run: yarn test --ci --coverage --maxWorkers=2 --testTimeout=30000
 
       - name: Build
         run: yarn build
