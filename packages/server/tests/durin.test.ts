@@ -15,11 +15,14 @@ async function doCall(server: Server, abi: string[], to: string, funcname: strin
     throw Error('Unknown handler');
   }
   const calldata = iface.encodeFunctionData(funcname, args);
-  const result = await server.call({ id: '1', data: { to, data: calldata } });
-  if (result.statusCode === 200) {
-    return iface.decodeFunctionResult(handler.type, result.data.result);
+  const result = await server.call({ to, data: calldata });
+  if (result.status !== 200) {
+    throw Error(result.body.message);
+  }
+  if (handler.type.outputs !== undefined) {
+    return iface.decodeFunctionResult(handler.type, result.body.data);
   } else {
-    throw result.error;
+    return [];
   }
 }
 
@@ -88,27 +91,15 @@ describe('Durin', () => {
           },
         },
       ]);
-      const app = server.makeApp('/rpc');
+      const app = server.makeApp('/rpc/');
       const iface = new ethers.utils.Interface(abi);
       const calldata = iface.encodeFunctionData('getSignedBalance', [TEST_ADDRESS]);
       await supertest(app)
-        .post('/rpc')
-        .set('Content-Type', 'application/json')
-        .set('Accept', 'application/json')
-        .send({
-          id: '1',
-          data: {
-            to: TEST_ADDRESS,
-            data: calldata,
-          },
-        })
+        .get(`/rpc/${TEST_ADDRESS}/${calldata}.json`)
         .expect(200)
         .expect('Content-Type', /json/)
         .then((response) => {
-          expect(response.body.jobRunID).to.equal('1');
-          expect(response.body.statusCode).to.equal(200);
-          expect(response.body.error).to.equal(undefined);
-          const responsedata = iface.decodeFunctionResult('getSignedBalance', response.body.data.result);
+          const responsedata = iface.decodeFunctionResult('getSignedBalance', response.body.data);
           expect(responsedata.length).to.equal(2);
           expect(responsedata[0].toNumber()).to.equal(123);
           expect(responsedata[1]).to.equal('0x123456');
@@ -117,52 +108,29 @@ describe('Durin', () => {
 
     it('returns a 404 for undefined functions', async () => {
       const server = new Server();
-      const app = server.makeApp('/rpc');
+      const app = server.makeApp('/rpc/');
       const iface = new ethers.utils.Interface(abi);
       const calldata = iface.encodeFunctionData('getSignedBalance', [TEST_ADDRESS]);
       await supertest(app)
-        .post('/rpc')
-        .set('Content-Type', 'application/json')
+        .get(`/rpc/${TEST_ADDRESS}/${calldata}.json`)
         .set('Accept', 'application/json')
-        .send({
-          id: '1',
-          data: {
-            to: TEST_ADDRESS,
-            data: calldata,
-          },
-        })
-        .expect(200)
+        .expect(404)
         .expect('Content-Type', /json/)
         .then((response) => {
-          expect(response.body.jobRunID).to.equal('1');
-          expect(response.body.statusCode).to.equal(404);
-          expect(response.body.error).to.not.equal(undefined);
-          expect(response.body.error.name).to.equal('FunctionNotFound');
+          expect(response.body.message).to.equal('No implementation for function with selector 0xce938715');
         });
     });
 
-    it('returns a 400 for missing fields', async () => {
+    it('returns a 400 for invalid fields', async () => {
       const server = new Server();
-      const app = server.makeApp('/rpc');
-      const iface = new ethers.utils.Interface(abi);
-      const calldata = iface.encodeFunctionData('getSignedBalance', [TEST_ADDRESS]);
+      const app = server.makeApp('/rpc/');
       await supertest(app)
-        .post('/rpc')
-        .set('Content-Type', 'application/json')
+        .get(`/rpc/${TEST_ADDRESS}/blah.json`)
         .set('Accept', 'application/json')
-        .send({
-          id: '1',
-          data: {
-            data: calldata,
-          },
-        })
-        .expect(200)
+        .expect(400)
         .expect('Content-Type', /json/)
         .then((response) => {
-          expect(response.body.jobRunID).to.equal('1');
-          expect(response.body.statusCode).to.equal(400);
-          expect(response.body.error).to.not.equal(undefined);
-          expect(response.body.error.name).to.equal('InvalidRequest');
+          expect(response.body.message).to.equal('Invalid request format');
         });
     });
   });

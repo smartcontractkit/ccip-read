@@ -3,44 +3,17 @@ import { ethers, BytesLike } from 'ethers';
 import { Fragment, FunctionFragment, Interface, JsonFragment } from '@ethersproject/abi';
 import { hexlify } from '@ethersproject/bytes';
 import express from 'express';
+import { isAddress, isBytesLike } from 'ethers/lib/utils';
 
 export interface RPCCall {
-  id: string;
-  data: {
-    to: BytesLike;
-    data: BytesLike;
-  };
+  to: BytesLike;
+  data: BytesLike;
 }
 
-interface RPCResponseBase {
-  jobRunID: string;
-  statusCode: number;
+export interface RPCResponse {
+  status: number;
+  body: any;
 }
-
-interface RPCSuccessResponse extends RPCResponseBase {
-  statusCode: 200;
-  data: {
-    result: BytesLike;
-  };
-}
-
-interface RPCClientErrorResponse extends RPCResponseBase {
-  statusCode: 400 | 404;
-  error: {
-    name: string;
-    message: string;
-  };
-}
-
-interface RPCServerErrorResponse extends RPCResponseBase {
-  statusCode: 400;
-  error: {
-    name: string;
-    message: string;
-  };
-}
-
-type RPCResponse = RPCSuccessResponse | RPCClientErrorResponse | RPCServerErrorResponse;
 
 export type HandlerFunc = (args: ethers.utils.Result, req: RPCCall) => Promise<Array<any>> | Array<any>;
 
@@ -54,10 +27,6 @@ function toInterface(abi: string | readonly (string | Fragment | JsonFragment)[]
     return abi;
   }
   return new Interface(abi);
-}
-
-function isRPCCall(x: any): x is RPCCall {
-  return x.id !== undefined && x.data !== undefined && x.data.to !== undefined && x.data.data !== undefined;
 }
 
 export interface HandlerDescription {
@@ -126,78 +95,68 @@ export class Server {
    * const ccipread = require('ccip-read');
    * const server = new ccipread.Server();
    * // set up server object here
-   * const app = server.makeApp();
+   * const app = server.makeApp('/');
    * app.serve(8080);
    * ```
-   * @returns An `express.Application` object configured to serve as a Durin gateway.
+   * The path prefix to `makeApp` will have sender and callData arguments appended.
+   * If your server is on example.com and configured as above, the URL template to use
+   * in a smart contract would be "https://example.com/{sender}/{callData}.json".
+   * @returns An `express.Application` object configured to serve as a CCIP read gateway.
    */
-  makeApp(path: string): express.Application {
+  makeApp(prefix: string): express.Application {
     const app = express();
     app.use(cors());
     app.use(express.json());
-    app.post(path, this.handleRequest.bind(this));
+    app.get(`${prefix}:sender/:callData.json`, this.handleRequest.bind(this));
     return app;
   }
 
   async handleRequest(req: express.Request, res: express.Response) {
-    if (!isRPCCall(req.body)) {
-      res.json({
-        jobRunID: req.body.id || '1',
-        statusCode: 400,
-        error: {
-          name: 'InvalidRequest',
-          message: 'Invalid request format',
-        },
+    if (!isAddress(req.params.sender) || !isBytesLike(req.params.callData)) {
+      res.status(400).json({
+        message: 'Invalid request format',
       });
       return;
     }
 
+    // Get the function selector
+    const sender = hexlify(req.params.sender);
+    const callData = hexlify(req.params.callData);
+
     try {
-      res.json(await this.call(req.body));
+      const response = await this.call({ to: sender, data: callData });
+      res.status(response.status).json(response.body);
     } catch (e) {
-      res.json({
-        jobRunID: req.body.id,
-        statusCode: 500,
-        error: {
-          name: 'InternalError',
-          message: `Internal server error: ${(e as any).toString()}`,
-        },
+      res.status(500).json({
+        message: `Internal server error: ${(e as any).toString()}`,
       });
     }
   }
 
-  async call(req: RPCCall): Promise<RPCResponse> {
-    // Get the function selector
-    const data = ethers.utils.hexlify(req.data.data);
-    const selector = data.slice(0, 10).toLowerCase();
+  async call(call: RPCCall): Promise<RPCResponse> {
+    const calldata = hexlify(call.data);
+    const selector = calldata.slice(0, 10).toLowerCase();
 
     // Find a function handler for this selector
     const handler = this.handlers[selector];
     if (handler === undefined) {
       return {
-        jobRunID: req.id,
-        statusCode: 404,
-        error: {
-          name: 'FunctionNotFound',
-          message: `No implementation for function with selector ${selector}`,
-        },
+        status: 404,
+        body: { message: `No implementation for function with selector ${selector}` },
       };
     }
 
     // Decode function arguments
-    const args = ethers.utils.defaultAbiCoder.decode(handler.type.inputs, '0x' + data.slice(10));
+    const args = ethers.utils.defaultAbiCoder.decode(handler.type.inputs, '0x' + calldata.slice(10));
 
     // Call the handler
-    const result = await handler.func(args, req);
+    const result = await handler.func(args, call);
 
     // Encode return data
     return {
-      jobRunID: req.id,
-      statusCode: 200,
-      data: {
-        result: handler.type.outputs
-          ? hexlify(ethers.utils.defaultAbiCoder.encode(handler.type.outputs, result))
-          : '0x',
+      status: 200,
+      body: {
+        data: handler.type.outputs ? hexlify(ethers.utils.defaultAbiCoder.encode(handler.type.outputs, result)) : '0x',
       },
     };
   }
