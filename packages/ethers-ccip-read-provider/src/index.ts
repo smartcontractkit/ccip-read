@@ -11,7 +11,7 @@ import {
   TransactionRequest,
   TransactionResponse,
 } from '@ethersproject/providers';
-import { fetchJson } from '@ethersproject/web';
+import { fetchJson, FetchJsonResponse } from '@ethersproject/web';
 
 const logger = new Logger('0.1.0');
 
@@ -20,7 +20,11 @@ const CCIP_READ_INTERFACE = new Interface([
   'function callback(bytes memory result, bytes memory extraData)',
 ]);
 
-export type Fetch = (url: string, json?: string) => Promise<any>;
+export type Fetch = (
+  url: string,
+  json?: string,
+  processFunc?: (value: any, response: FetchJsonResponse) => any
+) => Promise<any>;
 
 interface HasSigner {
   getSigner(addressOrIndex?: string | number): Signer;
@@ -70,28 +74,24 @@ async function handleCall(
 }
 
 async function sendRPC(fetcher: Fetch, urls: string[], to: BytesLike, callData: BytesLike): Promise<BytesLike> {
+  const processFunc = (value: any, response: FetchJsonResponse) => {
+    return { body: value, status: response.statusCode };
+  };
+
+  const args = { sender: hexlify(to), callData: hexlify(callData) };
   for (let url of urls) {
-    const data = await fetcher(
-      url,
-      JSON.stringify({
-        id: '1',
-        data: {
-          to: hexlify(to),
-          data: hexlify(callData),
-        },
-      })
-    );
-    if (data.statusCode >= 400 && data.statusCode <= 499) {
+    url = url.replace(/\{([^}]*)\}/g, (_match, p1: keyof typeof args) => args[p1]);
+    const data = await fetcher(url, undefined, processFunc);
+    if (data.status >= 400 && data.status <= 499) {
       return logger.throwError('bad response', Logger.errors.SERVER_ERROR, {
-        status: data.statusCode,
-        name: data.error.name,
-        message: data.error.message,
+        status: data.status,
+        name: data.body.message,
       });
     }
-    if (data.statusCode >= 200 && data.statusCode <= 299) {
-      return data.data.result;
+    if (data.status >= 200 && data.status <= 299) {
+      return data.body.data;
     }
-    logger.warn('Server returned an error', url, to, callData);
+    logger.warn('Server returned an error', url, to, callData, data.status, data.body.message);
   }
   return logger.throwError('All gateways returned an error', Logger.errors.SERVER_ERROR, { urls, to, callData });
 }

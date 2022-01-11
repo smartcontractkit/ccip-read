@@ -938,6 +938,19 @@
     ethers "^5.3.1"
     express "^4.17.1"
 
+"@chainlink/ethers-ccip-read-provider@0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@chainlink/ethers-ccip-read-provider/-/ethers-ccip-read-provider-0.1.0.tgz#d35c69971686ac9ed2067c7b3cde502f102ad31e"
+  integrity sha512-Bk2d8jp5tbeAz0UUIkwOtj2/8rgRUg3mp9LR6uKFmjov95LJbD1ozmw57q6dDUEGXG119BfhdqciFJNBBOfkRA==
+  dependencies:
+    "@ethersproject/abi" "^5.5.0"
+    "@ethersproject/abstract-signer" "^5.5.0"
+    "@ethersproject/bytes" "^5.5.0"
+    "@ethersproject/logger" "^5.5.0"
+    "@ethersproject/properties" "^5.5.0"
+    "@ethersproject/providers" "^5.5.1"
+    "@ethersproject/web" "^5.5.1"
+
 "@cnakazawa/watch@^1.0.3":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@cnakazawa/watch/-/watch-1.0.4.tgz#f864ae85004d0fcab6f50be9141c4da368d1656a"

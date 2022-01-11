@@ -9,11 +9,13 @@ import token from '../artifacts/Token.sol/Token.json';
 import { arrayify } from '@ethersproject/bytes';
 import { keccak256 } from '@ethersproject/solidity';
 import { JsonRpcSigner, Web3Provider } from '@ethersproject/providers';
+import { FetchJsonResponse } from '@ethersproject/web';
 
 chai.use(chaiAsPromised);
 
 const TEST_PRIVATE_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
 const TEST_ACCOUNT = '0x000000000000000000000000000000000000dead';
+const TEST_URL = 'http://localhost:8000/rpc/{sender}/{callData}.json';
 
 function deploySolidity(data: any, signer: ethers.Signer, ...args: any[]) {
   const factory = ethers.ContractFactory.fromSolidity(data, signer);
@@ -86,9 +88,9 @@ describe('ethers-ccip-read-provider', () => {
     ]
   );
 
-  function fetcher(_url: string, json?: string) {
-    const data = JSON.parse(json as string);
-    return server.call(data);
+  function fetcher(_url: string, _json?: string, _processFunc?: (value: any, response: FetchJsonResponse) => any) {
+    const [_match, to, data] = _url.match(/http:\/\/localhost:8000\/rpc\/([^/]+)\/([^/]+).json/) as RegExpMatchArray;
+    return server.call({ to, data });
   }
 
   beforeAll(async () => {
@@ -102,7 +104,7 @@ describe('ethers-ccip-read-provider', () => {
 
     const c = await deploySolidity(token, signer, 'Test', 'TST', 0);
     await c.setSigner(await messageSigner.getAddress());
-    await c.setUrls(['http://localhost:8000/']);
+    await c.setUrls([TEST_URL]);
     contract = c.connect(ccipProvider);
 
     snapshot = await baseProvider.send('evm_snapshot', []);
@@ -137,8 +139,8 @@ describe('ethers-ccip-read-provider', () => {
     });
 
     it('sends regular transactions', async () => {
-      await contract.connect(signer).setUrls(['http://localhost:8001/']);
-      expect(await contract.urls(0)).to.equal('http://localhost:8001/');
+      await contract.connect(signer).setUrls([TEST_URL]);
+      expect(await contract.urls(0)).to.equal(TEST_URL);
     });
 
     it('translates CCIP read transactions', async () => {
