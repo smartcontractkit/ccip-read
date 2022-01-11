@@ -4,7 +4,7 @@ import { Fragment, FunctionFragment, Interface, JsonFragment } from '@ethersproj
 import { hexlify } from '@ethersproject/bytes';
 import express from 'express';
 
-interface RPCCall {
+export interface RPCCall {
   id: string;
   data: {
     to: BytesLike;
@@ -42,7 +42,7 @@ interface RPCServerErrorResponse extends RPCResponseBase {
 
 type RPCResponse = RPCSuccessResponse | RPCClientErrorResponse | RPCServerErrorResponse;
 
-export type HandlerFunc = (args: ethers.utils.Result, req?: RPCCall) => Promise<Array<any>> | Array<any>;
+export type HandlerFunc = (args: ethers.utils.Result, req: RPCCall) => Promise<Array<any>> | Array<any>;
 
 interface Handler {
   type: FunctionFragment;
@@ -70,7 +70,7 @@ export interface HandlerDescription {
  *
  * Example usage:
  * ```javascript
- * const ccipread = require('@smartcontractkit/ccip-read-server');
+ * const ccipread = require('@chainlink/ccip-read-server');
  * const server = new ccipread.Server();
  * const abi = [
  *   'function getSignedBalance(address addr) public view returns(uint256 balance, bytes memory sig)',

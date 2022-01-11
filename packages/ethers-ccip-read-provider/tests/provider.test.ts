@@ -1,4 +1,4 @@
-import { Server } from '@smartcontractkit/ccip-read-server';
+import { Server } from '@chainlink/ccip-read-server';
 import { CCIPReadProvider, CCIPReadSigner } from '../src';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';

@@ -909,6 +909,13 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
+"@chainlink/ccip-read-server@../../../server":
+  version "0.1.0"
+  dependencies:
+    cors "^2.8.5"
+    ethers "^5.3.1"
+    express "^4.17.1"
+
 "@cnakazawa/watch@^1.0.3":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@cnakazawa/watch/-/watch-1.0.4.tgz#f864ae85004d0fcab6f50be9141c4da368d1656a"
@@ -1572,13 +1579,6 @@
     style-loader "^2.0.0"
     webpack "^4.44.1"
     webpack-bundle-analyzer "^4.4.2"
-
-"@smartcontractkit/ccip-read@../../../server":
-  version "0.1.0"
-  dependencies:
-    cors "^2.8.5"
-    ethers "^5.3.1"
-    express "^4.17.1"
 
 "@trysound/sax@0.1.1":
   version "0.1.1"

@@ -1,5 +1,5 @@
 const ethers = require('ethers');
-const ccipread = require('@smartcontractkit/ethers-ccip-read-provider');
+const ccipread = require('@chainlink/ethers-ccip-read-provider');
 const fs = require('fs');
 
 require('dotenv').config({ path: '../.env' });

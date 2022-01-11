@@ -1,4 +1,4 @@
-import * as ccipread from '@smartcontractkit/ccip-read';
+import { Server } from '@chainlink/ccip-read-server';
 import { ethers, BigNumber } from 'ethers';
 import fs from 'fs';
 
@@ -24,7 +24,7 @@ const balances = data.reduce((map: any, obj: any) => {
 
 export function makeApp(privateKey: string, path: string) {
   let signer = new ethers.Wallet(privateKey);
-  const server = new ccipread.Server();
+  const server = new Server();
   server.add(abi, [
     {
       type: 'getSignedBalance',

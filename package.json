@@ -1,5 +1,5 @@
 {
-    "name": "@smartcontractkit/ccip-read",
+    "name": "@chainlink/ccip-read",
     "version": "0.2.0",
     "description": "A protocol for contract-initiated offchain data retrieval",
     "engines": {

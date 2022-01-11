@@ -1,5 +1,5 @@
 {
-    "name": "@smartcontractkit/ethers-ccip-read-provider",
+    "name": "@chainlink/ethers-ccip-read-provider",
     "version": "0.1.0",
     "description": "ethers.js v5 provider for ccip-read, a secure protocol for offchain data retrieval",
     "main": "dist/index.js",
@@ -43,7 +43,7 @@
     "homepage": "https://github.com/smartcontractkit/ccip-read#readme",
     "devDependencies": {
         "@ethersproject/solidity": "^5.5.0",
-        "@smartcontractkit/ccip-read-server": "../server",
+        "@chainlink/ccip-read-server": "../server",
         "@types/chai": "^4.2.18",
         "@types/chai-as-promised": "^7.1.4",
         "@types/mocha": "^8.2.2",

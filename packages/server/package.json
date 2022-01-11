@@ -1,5 +1,5 @@
 {
-    "name": "@smartcontractkit/ccip-read-server",
+    "name": "@chainlink/ccip-read-server",
     "version": "0.1.0",
     "description": "Server framework for ccip-read, a secure protocol for offchain data retrieval",
     "main": "dist/index.js",
