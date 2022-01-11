@@ -1,19 +1,21 @@
 {
-    "name": "@chainlink/ccip-read",
-    "version": "0.2.0",
+    "private": true,
     "description": "A protocol for contract-initiated offchain data retrieval",
     "engines": {
         "node": ">=14"
     },
-    "subpackages": "server ethers-ccip-read-provider examples/trusted-gateway-token",
+    "workspaces": {
+        "packages": ["packages/server", "packages/ethers-ccip-read-provider", "packages/examples/trusted-gateway-token/client", "packages/examples/trusted-gateway-token/contracts", "packages/examples/trusted-gateway-token/server"],
+        "nohoist": ["**/@nomiclabs/**", "**/typescript", "**/ts-node", "**/@typechain/**", "hardhat"]
+    },
     "scripts": {
+        "env": "env",
         "prepare": "husky install",
-        "preinstall": "run(){ for d in $npm_package_subpackages; do cd packages/$d; echo $PWD; yarn install $* || exit; cd -; done; }; run",
-        "test": "run(){ for d in $npm_package_subpackages; do cd packages/$d; echo $PWD; yarn test $* || exit; cd -; done; }; run",
-        "lint": "run(){ for d in $npm_package_subpackages; do cd packages/$d; echo $PWD; yarn lint $* || exit; cd -; done; }; run",
-        "build": "run(){ for d in $npm_package_subpackages; do cd packages/$d; echo $PWD; yarn build $* || exit; cd -; done; }; run",
+        "test": "yarn workspaces run test",
+        "lint": "yarn workspaces run lint",
+        "build": "yarn workspaces run build",
         "docs": "typedoc --entryPointStrategy packages packages/server packages/ethers-ccip-read-provider",
-        "clean": "rm -fr node_modules; run(){ for d in $npm_package_subpackages; do cd packages/$d; echo $PWD; yarn clean $* || exit; cd -; done; }; run"
+        "clean": "rm -fr node_modules && yarn workspaces run clean"
     },
     "repository": {
         "type": "git",

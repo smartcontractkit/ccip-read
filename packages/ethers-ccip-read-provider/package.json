@@ -43,7 +43,7 @@
     "homepage": "https://github.com/smartcontractkit/ccip-read#readme",
     "devDependencies": {
         "@ethersproject/solidity": "^5.5.0",
-        "@chainlink/ccip-read-server": "../server",
+        "@chainlink/ccip-read-server": "0.1.0",
         "@types/chai": "^4.2.18",
         "@types/chai-as-promised": "^7.1.4",
         "@types/mocha": "^8.2.2",

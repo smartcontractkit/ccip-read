@@ -1,4 +1,5 @@
 {
+  "name": "@chainlink/ccip-read-example-trusted-gateway-token-server",
   "version": "0.1.0",
   "license": "MIT",
   "main": "dist/index.js",
@@ -33,7 +34,6 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "name": "trusted-gateway-token",
   "author": "Makoto Inoue",
   "module": "dist/trusted-gateway-token.esm.js",
   "size-limit": [
@@ -64,7 +64,7 @@
     "typescript": "^4.3.5"
   },
   "dependencies": {
-    "@chainlink/ccip-read-server": "../../../server",
+    "@chainlink/ccip-read-server": "0.1.0",
     "dotenv": "^10.0.0",
     "ethers": "^5.4.4",
     "ts-node": "^10.2.0"
