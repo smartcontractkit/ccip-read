@@ -3,5 +3,4 @@ node_modules
 dist
 docs
 .env
-artifacts
-cache
+yarn-error.log

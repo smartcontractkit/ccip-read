@@ -1,0 +1,74 @@
+{
+    "name": "@chainlink/ethers-ccip-read-provider",
+    "version": "0.2.0",
+    "description": "ethers.js v5 provider for ccip-read, a secure protocol for offchain data retrieval",
+    "main": "dist/index.js",
+    "typings": "dist/index.d.ts",
+    "typedocMain": "src/index.ts",
+    "files": [
+        "dist",
+        "src"
+    ],
+    "engines": {
+        "node": ">=14"
+    },
+    "scripts": {
+        "start": "tsdx watch",
+        "build": "tsdx build",
+        "test": "tsdx test",
+        "lint": "tsdx lint",
+        "prepare": "tsdx build",
+        "analyze": "size-limit --why",
+        "format": "prettier --write \"./src/*.{js,ts}\" \"tests/*.{js,ts}\"",
+        "clean": "rm -fr dist node_modules"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/smartcontractkit/ccip-read.js.git"
+    },
+    "author": "@ensdomains",
+    "module": "dist/ccip-read.js.esm.js",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/smartcontractkit/ccip-read/issues"
+    },
+    "peerDependencies": {},
+    "prettier": {
+        "printWidth": 120,
+        "semi": true,
+        "singleQuote": true,
+        "trailingComma": "es5",
+        "arrowParens": "always"
+    },
+    "homepage": "https://github.com/smartcontractkit/ccip-read#readme",
+    "devDependencies": {
+        "@ethersproject/solidity": "^5.5.0",
+        "@chainlink/ccip-read-server": "0.2.0",
+        "@types/chai": "^4.2.18",
+        "@types/chai-as-promised": "^7.1.4",
+        "@types/mocha": "^8.2.2",
+        "@types/node": "^15.12.2",
+        "chai": "^4.3.4",
+        "chai-as-promised": "^7.1.1",
+        "eslint-plugin-prettier": "^3.4.0",
+        "ethers": "^5.5.2",
+        "ganache-cli": "^6.12.2",
+        "mocha": "^9.0.0",
+        "prettier": "^2.3.2",
+        "solc": "^0.8.10",
+        "ts-loader": "^9.2.3",
+        "ts-node": "^10.0.0",
+        "tsdx": "^0.14.1",
+        "tslib": "^2.3.0",
+        "typescript": "^4.3.3"
+    },
+    "dependencies": {
+        "@ethersproject/abi": "^5.5.0",
+        "@ethersproject/abstract-signer": "^5.5.0",
+        "@ethersproject/bytes": "^5.5.0",
+        "@ethersproject/logger": "^5.5.0",
+        "@ethersproject/properties": "^5.5.0",
+        "@ethersproject/providers": "^5.5.1",
+        "@ethersproject/web": "^5.5.1"
+    }
+}
