@@ -4,3 +4,4 @@ dist
 docs
 .env
 yarn-error.log
+.idea
