@@ -108,20 +108,28 @@ export class Server {
     app.use(cors());
     app.use(express.json());
     app.get(`${prefix}:sender/:callData.json`, this.handleRequest.bind(this));
+    app.post(prefix, this.handleRequest.bind(this));
     return app;
   }
 
   async handleRequest(req: express.Request, res: express.Response) {
-    if (!isAddress(req.params.sender) || !isBytesLike(req.params.callData)) {
+    let sender: string;
+    let callData: string;
+
+    if (req.method === 'GET') {
+      sender = req.params.sender;
+      callData = req.params.callData;
+    } else {
+      sender = req.body.sender;
+      callData = req.body.data;
+    }
+
+    if (!isAddress(sender) || !isBytesLike(callData)) {
       res.status(400).json({
         message: 'Invalid request format',
       });
       return;
     }
-
-    // Get the function selector
-    const sender = hexlify(req.params.sender);
-    const callData = hexlify(req.params.callData);
 
     try {
       const response = await this.call({ to: sender, data: callData });
