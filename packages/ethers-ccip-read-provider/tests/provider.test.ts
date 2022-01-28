@@ -15,7 +15,8 @@ chai.use(chaiAsPromised);
 
 const TEST_PRIVATE_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
 const TEST_ACCOUNT = '0x000000000000000000000000000000000000dead';
-const TEST_URL = 'http://localhost:8000/rpc/{sender}/{callData}.json';
+const TEST_URL = 'http://localhost:8000/rpc/{sender}/{data}.json';
+const TEST_POST_URL = 'http://localhost:8000/rpc/';
 
 function deploySolidity(data: any, signer: ethers.Signer, ...args: any[]) {
   const factory = ethers.ContractFactory.fromSolidity(data, signer);
@@ -88,9 +89,15 @@ describe('ethers-ccip-read-provider', () => {
     ]
   );
 
-  function fetcher(_url: string, _json?: string, _processFunc?: (value: any, response: FetchJsonResponse) => any) {
-    const [_match, to, data] = _url.match(/http:\/\/localhost:8000\/rpc\/([^/]+)\/([^/]+).json/) as RegExpMatchArray;
-    return server.call({ to, data });
+  function fetcher(url: string, json?: string, _processFunc?: (value: any, response: FetchJsonResponse) => any) {
+    if(json === undefined) {
+      const [_match, to, data] = url.match(/http:\/\/localhost:8000\/rpc\/([^/]+)\/([^/]+).json/) as RegExpMatchArray;
+      return server.call({ to, data });
+    } else {
+      expect(url).to.equal(TEST_POST_URL);
+      const {sender, data} = JSON.parse(json);
+      return server.call({ to: sender, data});
+    }
   }
 
   beforeAll(async () => {
@@ -121,6 +128,11 @@ describe('ethers-ccip-read-provider', () => {
     });
 
     it('handles an OffchainLookup', async () => {
+      expect((await contract.connect(ccipProvider).balanceOf(account)).toString()).to.equal('1000000000000000000000');
+    });
+
+    it('handles an OffchainLookup via POST', async () => {
+      await contract.connect(await baseProvider.getSigner()).setUrls([TEST_POST_URL]);
       expect((await contract.connect(ccipProvider).balanceOf(account)).toString()).to.equal('1000000000000000000000');
     });
 
