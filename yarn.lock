@@ -929,19 +929,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@chainlink/ccip-read-server@0.1.0":
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/@chainlink/ccip-read-server/-/ccip-read-server-0.1.0.tgz#7dfcbc59082b34cf8feb53f920ac22abd64a1fb6"
-  integrity sha512-Uvo7lgRwowhNPFQnAkmnCMpjIxKvfL4si46tcvoUlTNhpVVyrHFy2ugYECCb1VdHVfEGgLSwOGVNiSC9us9qcg==
-  dependencies:
-    cors "^2.8.5"
-    ethers "^5.3.1"
-    express "^4.17.1"
-
-"@chainlink/ethers-ccip-read-provider@0.1.0":
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/@chainlink/ethers-ccip-read-provider/-/ethers-ccip-read-provider-0.1.0.tgz#d35c69971686ac9ed2067c7b3cde502f102ad31e"
-  integrity sha512-Bk2d8jp5tbeAz0UUIkwOtj2/8rgRUg3mp9LR6uKFmjov95LJbD1ozmw57q6dDUEGXG119BfhdqciFJNBBOfkRA==
+"@chainlink/ethers-ccip-read-provider@0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@chainlink/ethers-ccip-read-provider/-/ethers-ccip-read-provider-0.2.0.tgz#750d0d5013feef986026aa5af04155c33aeca84a"
+  integrity sha512-vK60SXfLUH1XPygXJ46uW64b3RrlrPAgwUqPnnUAGAwL3hl0ywPpB9zdWUqbPICxjFh/FcYcWq80Scu/vmPvvA==
   dependencies:
     "@ethersproject/abi" "^5.5.0"
     "@ethersproject/abstract-signer" "^5.5.0"
