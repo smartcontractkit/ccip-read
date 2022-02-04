@@ -44,8 +44,14 @@ interface RevertError{
   }
 }
 
-function isRevertError(e: any): e is RevertError{
-  return typeof e?.error?.data?.originalError?.data  === 'string'
+function isOffchainLookupError(e: any): e is RevertError{
+  let bytes
+  if(e.error!.data!.originalError!.data){
+    bytes = arrayify(e.error.data.originalError.data)
+    return bytes.length % 32 !== 4 || hexlify(bytes.slice(0, 4)) !== CCIP_READ_INTERFACE.getSighash('OffchainLookup')
+  }else{
+    return false
+  }
 }
 
 async function handleCall(
@@ -55,12 +61,12 @@ async function handleCall(
 ): Promise<{ transaction: TransactionRequest; result: BytesLike }> {
   for (let i = 0; i < maxCalls; i++) {
     let result
-    let bytes:Uint8Array = arrayify('')
+    let bytes:any
     try{
       result = await provider.parent.perform('call', params);
       bytes = arrayify(result);
     }catch(e){
-      if(isRevertError(e)){
+      if(isOffchainLookupError(e)){
         bytes = arrayify(e.error.data.originalError.data)
       }
     }
