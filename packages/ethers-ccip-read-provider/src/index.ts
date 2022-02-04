@@ -34,19 +34,39 @@ function hasSigner(obj: any): obj is HasSigner {
   return (obj as unknown as HasSigner).getSigner !== undefined;
 }
 
+interface RevertError{
+  error:{
+    data:{
+      originalError:{
+        data: string
+      }
+    }
+  }
+}
+
+function isRevertError(e: any): e is RevertError{
+  return typeof e?.error?.data?.originalError?.data  === 'string'
+}
+
 async function handleCall(
   provider: CCIPReadProvider,
   params: { transaction: TransactionRequest; blockTag?: BlockTag },
   maxCalls = 4
 ): Promise<{ transaction: TransactionRequest; result: BytesLike }> {
   for (let i = 0; i < maxCalls; i++) {
-    const result = await provider.parent.perform('call', params);
-    const bytes = arrayify(result);
-
+    let result
+    let bytes:Uint8Array = arrayify('')
+    try{
+      result = await provider.parent.perform('call', params);
+      bytes = arrayify(result);
+    }catch(e){
+      if(isRevertError(e)){
+        bytes = arrayify(e.error.data.originalError.data)
+      }
+    }
     if (bytes.length % 32 !== 4 || hexlify(bytes.slice(0, 4)) !== CCIP_READ_INTERFACE.getSighash('OffchainLookup')) {
       return { transaction: params.transaction, result: bytes };
     }
-
     const { sender, urls, callData, callbackFunction, extraData } = CCIP_READ_INTERFACE.decodeErrorResult(
       'OffchainLookup',
       bytes
