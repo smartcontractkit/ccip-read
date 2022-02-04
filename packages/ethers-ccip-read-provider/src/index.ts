@@ -34,6 +34,20 @@ function hasSigner(obj: any): obj is HasSigner {
   return (obj as unknown as HasSigner).getSigner !== undefined;
 }
 
+interface RevertError{
+  error: {
+    data: {
+      originalError: {
+        data: string;
+      }
+    }
+  }
+}
+
+function isRevertError(e: any): e is RevertError{
+  return typeof e?.error?.data?.originalError?.data  === 'string';
+}
+
 async function handleCall(
   provider: CCIPReadProvider,
   params: { transaction: TransactionRequest; blockTag?: BlockTag },
@@ -46,8 +60,8 @@ async function handleCall(
       result = await provider.parent.perform('call', params);
       bytes = arrayify(result);
     }catch(e){
-      if(e.error!.data!.originalError!.data){
-        bytes = arrayify(e.error.data.originalError.data)
+      if(isRevertError(e)){
+        bytes = arrayify(e.error.data.originalError.data);
       }
     }
     if (bytes.length % 32 !== 4 || hexlify(bytes.slice(0, 4)) !== CCIP_READ_INTERFACE.getSighash('OffchainLookup')) {
