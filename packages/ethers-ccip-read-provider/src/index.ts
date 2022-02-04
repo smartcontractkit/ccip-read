@@ -34,18 +34,18 @@ function hasSigner(obj: any): obj is HasSigner {
   return (obj as unknown as HasSigner).getSigner !== undefined;
 }
 
-interface RevertError{
+interface RevertError {
   error: {
     data: {
       originalError: {
         data: string;
-      }
-    }
-  }
+      };
+    };
+  };
 }
 
-function isRevertError(e: any): e is RevertError{
-  return typeof e?.error?.data?.originalError?.data  === 'string';
+function isRevertError(e: any): e is RevertError {
+  return typeof e?.error?.data?.originalError?.data === 'string';
 }
 
 async function handleCall(
@@ -54,13 +54,13 @@ async function handleCall(
   maxCalls = 4
 ): Promise<{ transaction: TransactionRequest; result: BytesLike }> {
   for (let i = 0; i < maxCalls; i++) {
-    let result
-    let bytes:any
-    try{
+    let result;
+    let bytes: any;
+    try {
       result = await provider.parent.perform('call', params);
       bytes = arrayify(result);
-    }catch(e){
-      if(isRevertError(e)){
+    } catch (e) {
+      if (isRevertError(e)) {
         bytes = arrayify(e.error.data.originalError.data);
       }
     }
