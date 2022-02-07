@@ -22,6 +22,7 @@
     "hardhat": "^2.7.1"
   },
   "dependencies": {
+    "@nomiclabs/hardhat-etherscan": "3.0.0",
     "@openzeppelin/contracts": "^4.2.0",
     "envfile": "^6.17.0"
   }

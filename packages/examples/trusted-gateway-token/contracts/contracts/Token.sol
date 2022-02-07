@@ -11,6 +11,7 @@ interface Gateway {
 
 error OffchainLookup(address sender, string[] urls, bytes callData, bytes4 callbackFunction, bytes extraData);
 
+
 /**
  * @title Token
  * @dev Very simple ERC20 Token example, where all tokens are pre-assigned to the creator.
@@ -77,9 +78,22 @@ contract Token is ERC20, Ownable {
     return true;
   }
 
-  function balanceOfWithSig(bytes calldata result, bytes calldata extraData) external view returns(uint) {
+    function balanceOfWithSig(bytes calldata result, bytes calldata extraData) external view returns(uint) {
+        if(result.length < 0) {
+
+        }
+        revert OffchainLookup(
+            address(this),
+            urls,
+            abi.encodeWithSelector(Gateway.getSignedBalance.selector, msg.sender),
+            Token.balanceOfWithSigTwo.selector,
+            extraData
+        );
+    }
+
+  function balanceOfWithSigTwo(bytes calldata result, bytes calldata extraData) external view returns(uint) {
     (address addr) = abi.decode(extraData, (address));
-    
+
     uint balance = super.balanceOf(addr);
     return balance + _getBalance(addr, result);
   }
