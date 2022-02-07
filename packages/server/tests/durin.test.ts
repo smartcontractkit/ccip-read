@@ -81,7 +81,7 @@ describe('Durin', () => {
   });
 
   describe('end-to-end tests', () => {
-    it('exposes a JSON-RPC server', async () => {
+    it('answers GET requests', async () => {
       const server = new Server();
       server.add(abi, [
         {
@@ -96,6 +96,37 @@ describe('Durin', () => {
       const calldata = iface.encodeFunctionData('getSignedBalance', [TEST_ADDRESS]);
       await supertest(app)
         .get(`/rpc/${TEST_ADDRESS}/${calldata}.json`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .then((response) => {
+          const responsedata = iface.decodeFunctionResult('getSignedBalance', response.body.data);
+          expect(responsedata.length).to.equal(2);
+          expect(responsedata[0].toNumber()).to.equal(123);
+          expect(responsedata[1]).to.equal('0x123456');
+        });
+    });
+
+    it('answers POST requests', async () => {
+      const server = new Server();
+      server.add(abi, [
+        {
+          type: 'getSignedBalance',
+          func: (_args) => {
+            return Promise.resolve([123, '0x123456']);
+          },
+        },
+      ]);
+      const app = server.makeApp('/rpc/');
+      const iface = new ethers.utils.Interface(abi);
+      const calldata = iface.encodeFunctionData('getSignedBalance', [TEST_ADDRESS]);
+      await supertest(app)
+        .post('/rpc/')
+        .set('Content-Type', 'application/json')
+        .set('Accept', 'application/json')
+        .send({
+          'sender': TEST_ADDRESS,
+          'data': calldata
+        })
         .expect(200)
         .expect('Content-Type', /json/)
         .then((response) => {

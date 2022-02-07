@@ -929,6 +929,15 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
+"@chainlink/ccip-read-server@0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@chainlink/ccip-read-server/-/ccip-read-server-0.2.0.tgz#d8899490682d3d14db92124e31bdd93d5c03e1d3"
+  integrity sha512-htJqhawUMJ9bAGwdSpBXNIcAT25GcVJDvsjprODpzvoD/hnejaswwLwRbuZBAMuuSQiP0Hl+1tlZfIcRlHgpCQ==
+  dependencies:
+    cors "^2.8.5"
+    ethers "^5.3.1"
+    express "^4.17.1"
+
 "@cnakazawa/watch@^1.0.3":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@cnakazawa/watch/-/watch-1.0.4.tgz#f864ae85004d0fcab6f50be9141c4da368d1656a"

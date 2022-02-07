@@ -1,6 +1,6 @@
 {
     "name": "@chainlink/ccip-read-server",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "description": "Server framework for ccip-read, a secure protocol for offchain data retrieval",
     "main": "dist/index.js",
     "typings": "dist/index.d.ts",

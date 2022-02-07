@@ -78,10 +78,10 @@ async function sendRPC(fetcher: Fetch, urls: string[], to: BytesLike, callData: 
     return { body: value, status: response.statusCode };
   };
 
-  const args = { sender: hexlify(to), callData: hexlify(callData) };
-  for (let url of urls) {
-    url = url.replace(/\{([^}]*)\}/g, (_match, p1: keyof typeof args) => args[p1]);
-    const data = await fetcher(url, undefined, processFunc);
+  const args = { sender: hexlify(to), data: hexlify(callData) };
+  for (let template of urls) {
+    const url = template.replace(/\{([^}]*)\}/g, (_match, p1: keyof typeof args) => args[p1]);
+    const data = await fetcher(url, template.includes('{data}') ? undefined : JSON.stringify(args), processFunc);
     if (data.status >= 400 && data.status <= 499) {
       return logger.throwError('bad response', Logger.errors.SERVER_ERROR, {
         status: data.status,

@@ -22,25 +22,14 @@ describe('trusted-gateway-token server', () => {
         TEST_ADDRESS,
       ]);
       await supertest(makeApp(SIGNER_PRIVATE_KEY, '/'))
-        .post('/')
-        .set('Content-Type', 'application/json')
-        .set('Accept', 'application/json')
-        .send({
-          id: '1',
-          data: {
-            to: TEST_ADDRESS,
-            data: calldata,
-          },
-        })
+        .get(`/${TEST_ADDRESS}/${calldata}.json`)
+        .send()
         .expect(200)
         .expect('Content-Type', /json/)
         .then(response => {
-          expect(response.body.jobRunID).to.equal('1');
-          expect(response.body.statusCode).to.equal(200);
-          expect(response.body.error).to.equal(undefined);
           const responsedata = iface.decodeFunctionResult(
             'getSignedBalance',
-            response.body.data.result
+            response.body.data
           );
           expect(responsedata.length).to.equal(2);
           expect(responsedata[0].toString()).to.equal('1000000000000000000000');
