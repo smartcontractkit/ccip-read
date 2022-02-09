@@ -63,8 +63,8 @@ async function handleCall(
     } catch (e) {
       if (isRevertError(e)) {
         bytes = arrayify(e.error.data.originalError.data);
-      }else{
-        return logger.throwError('The error message does not contain originalError', Logger.errors.UNKNOWN_ERROR)
+      } else {
+        return logger.throwError('The error message does not contain originalError', Logger.errors.UNKNOWN_ERROR);
       }
     }
     if (bytes.length % 32 !== 4 || hexlify(bytes.slice(0, 4)) !== CCIP_READ_INTERFACE.getSighash('OffchainLookup')) {
