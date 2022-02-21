@@ -19,7 +19,7 @@
     "prepare": "tsdx build",
     "size": "size-limit",
     "analyze": "size-limit --why",
-    "format": "prettier --write \"./src/*.{js,ts}\" \"tests/*.{js,ts}\"",
+    "format": "prettier --write \"./src/*.{js,ts}\"",
     "clean": "rm -fr dist node_modules"
   },
   "peerDependencies": {},

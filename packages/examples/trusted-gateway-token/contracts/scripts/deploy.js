@@ -21,7 +21,11 @@ async function main() {
   const Token = await hre.ethers.getContractFactory("Token");
   const name = 'Test'
   const symbol = 'TXT'
-  const urls = ['http://localhost:1989/', 'http://localhost:8080/']
+  const urls = [
+    'http://localhost:1989/',
+    'http://localhost:8080/',
+    'http://localhost:8080/{sender}/{data}'
+  ]
   const signers = await ethers.getSigners();
   const initial_supply = 0;
   token = await Token.deploy(name, symbol, initial_supply);

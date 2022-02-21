@@ -124,8 +124,8 @@ describe('Durin', () => {
         .set('Content-Type', 'application/json')
         .set('Accept', 'application/json')
         .send({
-          'sender': TEST_ADDRESS,
-          'data': calldata
+          sender: TEST_ADDRESS,
+          data: calldata,
         })
         .expect(200)
         .expect('Content-Type', /json/)
