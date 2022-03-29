@@ -1,3 +1,8 @@
+# [DEPRECATION WARNING]
+
+Please use ethers.js 5.6.2 or newer that includes both CCIP read and wildcard support.
+Plrease read [the doc](https://docs.ens.domains/dapp-developer-guide/ens-l2-offchain) for more detail.
+
 # Ethers CCIP-read provider
 This package implements an Ethers provider that wraps any other Ethers provider, adding transparent support for EIP 3668 (CCIP read).
 
