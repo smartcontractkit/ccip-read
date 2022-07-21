@@ -1,4 +1,4 @@
-import { Server } from '@chainlink/ccip-read-server';
+import { RPCResponse, Server } from '@chainlink/ccip-read-server';
 import { CCIPReadProvider, CCIPReadSigner } from '../src';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
@@ -89,14 +89,18 @@ describe('ethers-ccip-read-provider', () => {
     ]
   );
 
-  function fetcher(url: string, json?: string, _processFunc?: (value: any, response: FetchJsonResponse) => any) {
-    if(json === undefined) {
+  function fetcher(
+    url: string,
+    json?: string,
+    _processFunc?: (value: any, response: FetchJsonResponse) => any
+  ): Promise<RPCResponse> {
+    if (json === undefined) {
       const [_match, to, data] = url.match(/http:\/\/localhost:8000\/rpc\/([^/]+)\/([^/]+).json/) as RegExpMatchArray;
       return server.call({ to, data });
     } else {
       expect(url).to.equal(TEST_POST_URL);
-      const {sender, data} = JSON.parse(json);
-      return server.call({ to: sender, data});
+      const { sender, data } = JSON.parse(json);
+      return server.call({ to: sender, data });
     }
   }
 
