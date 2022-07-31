@@ -4,6 +4,7 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { ethers } from 'ethers';
 import ganache from 'ganache-cli';
+import testMaxRetry from '../artifacts/TestMaxRetry.sol/TestMaxRetry.json';
 import testUtils from '../artifacts/TestUtils.sol/TestUtils.json';
 import token from '../artifacts/Token.sol/Token.json';
 import { arrayify } from '@ethersproject/bytes';
@@ -66,6 +67,7 @@ describe('ethers-ccip-read-provider', () => {
   const baseProvider = new ethers.providers.Web3Provider(ganache.provider());
   const messageSigner = new ethers.Wallet(TEST_PRIVATE_KEY);
   let ccipProvider: CCIPReadProvider;
+  let maxRetryContract: ethers.Contract;
   let utilsContract: ethers.Contract;
   let contract: ethers.Contract;
   let account: string;
@@ -100,6 +102,8 @@ describe('ethers-ccip-read-provider', () => {
     }
   }
 
+  jest.setTimeout(40000);
+
   beforeAll(async () => {
     const signer = await baseProvider.getSigner();
     account = await signer.getAddress();
@@ -107,6 +111,10 @@ describe('ethers-ccip-read-provider', () => {
     const proxyMiddleware = new RevertNormalisingMiddleware(baseProvider);
     ccipProvider = new CCIPReadProvider(proxyMiddleware, fetcher);
 
+    const m = (await deploySolidity(testMaxRetry, signer));
+    await m.setUrls([TEST_URL]);
+    maxRetryContract = m.connect(ccipProvider);
+    
     utilsContract = (await deploySolidity(testUtils, signer)).connect(ccipProvider);
 
     const c = await deploySolidity(token, signer, 'Test', 'TST', 0);
@@ -139,6 +147,12 @@ describe('ethers-ccip-read-provider', () => {
     it('throws an error if the OffchainLookup is thrown in a nested scope', async () => {
       await expect(utilsContract.balanceOf(contract.address, account)).to.be.rejectedWith(
         'OffchainLookup thrown in nested scope'
+      );
+    });
+
+    it('throws an error if the OffchainLookup redirects beyond maxRetry limit', async () => {
+      await expect(maxRetryContract.balanceOf(account)).to.be.rejectedWith(
+        'Too many redirects'
       );
     });
   });
