@@ -12,7 +12,7 @@ This example showcase a simple token airdrop usecase using a [trusted gateway](h
 ### Showing the token balance
 
 - An ERC20 token on L1 has `signer` field and the token owner can set an Ethereum address. 
-- The gateway server has a flat file containg the list of ethereum address and how many tokens to airdrop.
+- The gateway server has a flat file contains the list of ethereum address and how many tokens to airdrop.
 - When a client calls `token.balanceOf(address)` on L1, it throws `OffchainLookup` error with the gateway server url.
 - When the client calls the token gateway server, it checks the file to see if the `address` qualifies for the airdrop and how many, signs the message of `balance` and `address` with the private key of the `signer`, and returns balance and signature.
 - The client then calls `token.balanceOfWithSig()` with the proof.
