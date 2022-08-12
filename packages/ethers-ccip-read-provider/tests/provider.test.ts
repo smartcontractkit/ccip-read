@@ -4,6 +4,7 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { ethers } from 'ethers';
 import ganache from 'ganache-cli';
+import testMaxRetry from '../artifacts/TestMaxRetry.sol/TestMaxRetry.json';
 import testUtils from '../artifacts/TestUtils.sol/TestUtils.json';
 import token from '../artifacts/Token.sol/Token.json';
 import { arrayify } from '@ethersproject/bytes';
@@ -69,6 +70,7 @@ describe('ethers-ccip-read-provider', () => {
   const messageSigner = new ethers.Wallet(TEST_PRIVATE_KEY);
   let proxyMiddleware: RevertNormalisingMiddleware;
   let ccipProvider: CCIPReadProvider;
+  let maxRetryContract: ethers.Contract;
   let utilsContract: ethers.Contract;
   let contract: ethers.Contract;
   let account: string;
@@ -123,6 +125,8 @@ describe('ethers-ccip-read-provider', () => {
       return fetcher(url, json, _processFunc);
     };
   };
+ 
+  jest.setTimeout(40000);
 
   beforeAll(async () => {
     const signer = baseProvider.getSigner();
@@ -131,6 +135,10 @@ describe('ethers-ccip-read-provider', () => {
     proxyMiddleware = new RevertNormalisingMiddleware(baseProvider);
     ccipProvider = new CCIPReadProvider(proxyMiddleware, fetcher);
 
+    const m = (await deploySolidity(testMaxRetry, signer));
+    await m.setUrls([TEST_URL]);
+    maxRetryContract = m.connect(ccipProvider);
+    
     utilsContract = (await deploySolidity(testUtils, signer)).connect(ccipProvider);
 
     const c = await deploySolidity(token, signer, 'Test', 'TST', 0);
@@ -206,6 +214,12 @@ describe('ethers-ccip-read-provider', () => {
         result = error;
       }
       expect(result).to.equal('1000000000000000000000');
+    });
+
+    it('throws an error if the OffchainLookup redirects beyond maxRetry limit', async () => {
+      await expect(maxRetryContract.balanceOf(account)).to.be.rejectedWith(
+        'Too many redirects'
+      );
     });
   });
 
