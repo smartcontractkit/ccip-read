@@ -110,6 +110,7 @@ async function sendRPC(fetcher: Fetch, urls: string[], to: BytesLike, callData: 
         status: data.status,
         name: data.body.message,
       });
+      continue;
     }
     if (data.status >= 200 && data.status <= 299) {
       return data.body.data;
