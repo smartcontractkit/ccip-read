@@ -106,10 +106,11 @@ async function sendRPC(fetcher: Fetch, urls: string[], to: BytesLike, callData: 
     const url = template.replace(/\{([^}]*)\}/g, (_match, p1: keyof typeof args) => args[p1]);
     const data = await fetcher(url, template.includes('{data}') ? undefined : JSON.stringify(args), processFunc);
     if (data.status >= 400 && data.status <= 499) {
-      return logger.throwError('bad response', Logger.errors.SERVER_ERROR, {
+      logger.warn('Bad response', Logger.errors.SERVER_ERROR, {
         status: data.status,
         name: data.body.message,
       });
+      continue;
     }
     if (data.status >= 200 && data.status <= 299) {
       return data.body.data;
