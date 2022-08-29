@@ -1,9 +1,9 @@
+import cors from 'cors';
 import { ethers, BytesLike } from 'ethers';
 import { Fragment, FunctionFragment, Interface, JsonFragment } from '@ethersproject/abi';
 import { hexlify } from '@ethersproject/bytes';
-import { Router } from 'itty-router';
+import express from 'express';
 import { isAddress, isBytesLike } from 'ethers/lib/utils';
-import { IRequest } from './utils/cors';
 
 export interface RPCCall {
   to: BytesLike;
@@ -103,22 +103,16 @@ export class Server {
    * in a smart contract would be "https://example.com/{sender}/{callData}.json".
    * @returns An `express.Application` object configured to serve as a CCIP read gateway.
    */
-  makeApp(prefix: string): Router {
-    const app = Router();
-    app.get(prefix, () => new Response('hey ho!', { status: 200 }));
-    /*
-     * uncomment app.options for cors
-     * also wrap responses with cors wrapper
-     * e.g. return wrapCorsHeader(new Response('Invalid request format', { status: 400 }));
-     */
-    // app.options(`${prefix}:sender/:callData.json`, handleCors({ methods: 'GET', maxAge: 86400 }));
+  makeApp(prefix: string): express.Application {
+    const app = express();
+    app.use(cors());
+    app.use(express.json());
     app.get(`${prefix}:sender/:callData.json`, this.handleRequest.bind(this));
-    // app.options(prefix, handleCors({ methods: 'POST', maxAge: 86400 }));
     app.post(prefix, this.handleRequest.bind(this));
     return app;
   }
 
-  async handleRequest(req: IRequest) {
+  async handleRequest(req: express.Request, res: express.Response) {
     let sender: string;
     let callData: string;
 
@@ -126,25 +120,24 @@ export class Server {
       sender = req.params.sender;
       callData = req.params.callData;
     } else {
-      const body = await req.json();
-      sender = body.sender;
-      callData = body.data;
+      sender = req.body.sender;
+      callData = req.body.data;
     }
 
     if (!isAddress(sender) || !isBytesLike(callData)) {
-      return new Response('Invalid request format', { status: 400 });
+      res.status(400).json({
+        message: 'Invalid request format',
+      });
+      return;
     }
 
     try {
       const response = await this.call({ to: sender, data: callData });
-      return new Response(JSON.stringify(response.body), {
-        status: response.status,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      res.status(response.status).json(response.body);
     } catch (e) {
-      return new Response(`Internal server error: ${(e as any).toString()}`, { status: 500 });
+      res.status(500).json({
+        message: `Internal server error: ${(e as any).toString()}`,
+      });
     }
   }
 
