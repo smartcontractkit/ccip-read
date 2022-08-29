@@ -5,7 +5,7 @@
         "node": ">=14"
     },
     "workspaces": {
-        "packages": ["packages/server", "packages/ethers-ccip-read-provider", "packages/examples/trusted-gateway-token/client", "packages/examples/trusted-gateway-token/contracts", "packages/examples/trusted-gateway-token/server"],
+        "packages": ["packages/server", "packages/worker", "packages/ethers-ccip-read-provider", "packages/examples/trusted-gateway-token/client", "packages/examples/trusted-gateway-token/contracts", "packages/examples/trusted-gateway-token/server"],
         "nohoist": ["**/@nomiclabs/**", "**/typescript", "**/ts-node", "**/@typechain/**", "hardhat"]
     },
     "scripts": {
