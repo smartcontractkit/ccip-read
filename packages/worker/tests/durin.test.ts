@@ -1,12 +1,20 @@
+import 'isomorphic-fetch';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { ethers } from 'ethers';
-import supertest from 'supertest';
 import { Server } from '../src/index';
 
 chai.use(chaiAsPromised);
 
 const TEST_ADDRESS = '0x1234567890123456789012345678901234567890';
+
+const buildRequest = ({ method = 'GET', path, url = `http://localhost${path}`, ...rest }: any) => {
+  return new Request(url, {
+    method,
+    ...rest,
+    ...(rest?.body && { body: JSON.stringify(rest.body)}),
+  })
+};
 
 async function doCall(server: Server, abi: string[], to: string, funcname: string, args: any[]) {
   const iface = new ethers.utils.Interface(abi);
@@ -81,6 +89,21 @@ describe('Durin', () => {
   });
 
   describe('end-to-end tests', () => {
+    it('welcome GET requests', async () => {
+      const server = new Server();
+      server.add(abi, [
+        {
+          type: 'getSignedBalance',
+          func: (_args) => {
+            return Promise.resolve([123, '0x123456']);
+          },
+        },
+      ]);
+      const app = server.makeApp('/rpc');
+      const result = await app.handle(buildRequest({ path: `/rpc` }));
+      expect(await result.text()).to.equal('hey ho!');
+    });
+
     it('answers GET requests', async () => {
       const server = new Server();
       server.add(abi, [
@@ -94,16 +117,12 @@ describe('Durin', () => {
       const app = server.makeApp('/rpc/');
       const iface = new ethers.utils.Interface(abi);
       const calldata = iface.encodeFunctionData('getSignedBalance', [TEST_ADDRESS]);
-      await supertest(app)
-        .get(`/rpc/${TEST_ADDRESS}/${calldata}.json`)
-        .expect(200)
-        .expect('Content-Type', /json/)
-        .then((response) => {
-          const responsedata = iface.decodeFunctionResult('getSignedBalance', response.body.data);
-          expect(responsedata.length).to.equal(2);
-          expect(responsedata[0].toNumber()).to.equal(123);
-          expect(responsedata[1]).to.equal('0x123456');
-        });
+      const response = await app.handle(buildRequest({ path: `/rpc/${TEST_ADDRESS}/${calldata}.json` }));
+      const result = await response.json();
+      const responsedata = iface.decodeFunctionResult('getSignedBalance', result.data);
+      expect(responsedata.length).to.equal(2);
+      expect(responsedata[0].toNumber()).to.equal(123);
+      expect(responsedata[1]).to.equal('0x123456');
     });
 
     it('answers POST requests', async () => {
@@ -116,25 +135,27 @@ describe('Durin', () => {
           },
         },
       ]);
-      const app = server.makeApp('/rpc/');
+      const app = server.makeApp('/rpc');
       const iface = new ethers.utils.Interface(abi);
       const calldata = iface.encodeFunctionData('getSignedBalance', [TEST_ADDRESS]);
-      await supertest(app)
-        .post('/rpc/')
-        .set('Content-Type', 'application/json')
-        .set('Accept', 'application/json')
-        .send({
-          'sender': TEST_ADDRESS,
-          'data': calldata
+      const headers = new Headers();
+      headers.append('Accept', 'application/json');
+      const response = await app.handle(
+        buildRequest({
+          path: `/rpc`,
+          method: 'POST',
+          body: {
+            sender: TEST_ADDRESS,
+            data: calldata,
+          },
+          headers,
         })
-        .expect(200)
-        .expect('Content-Type', /json/)
-        .then((response) => {
-          const responsedata = iface.decodeFunctionResult('getSignedBalance', response.body.data);
-          expect(responsedata.length).to.equal(2);
-          expect(responsedata[0].toNumber()).to.equal(123);
-          expect(responsedata[1]).to.equal('0x123456');
-        });
+      );
+      const result = await response.json();
+      const responsedata = iface.decodeFunctionResult('getSignedBalance', result.data);
+      expect(responsedata.length).to.equal(2);
+      expect(responsedata[0].toNumber()).to.equal(123);
+      expect(responsedata[1]).to.equal('0x123456');
     });
 
     it('returns a 404 for undefined functions', async () => {
@@ -142,27 +163,25 @@ describe('Durin', () => {
       const app = server.makeApp('/rpc/');
       const iface = new ethers.utils.Interface(abi);
       const calldata = iface.encodeFunctionData('getSignedBalance', [TEST_ADDRESS]);
-      await supertest(app)
-        .get(`/rpc/${TEST_ADDRESS}/${calldata}.json`)
-        .set('Accept', 'application/json')
-        .expect(404)
-        .expect('Content-Type', /json/)
-        .then((response) => {
-          expect(response.body.message).to.equal('No implementation for function with selector 0xce938715');
-        });
+      const response = await app.handle(
+        buildRequest({
+          path: `/rpc/${TEST_ADDRESS}/${calldata}.json`
+        })
+      );
+      const result = await response.json();
+      expect(result.message).to.equal('No implementation for function with selector 0xce938715')
     });
 
     it('returns a 400 for invalid fields', async () => {
       const server = new Server();
       const app = server.makeApp('/rpc/');
-      await supertest(app)
-        .get(`/rpc/${TEST_ADDRESS}/blah.json`)
-        .set('Accept', 'application/json')
-        .expect(400)
-        .expect('Content-Type', /json/)
-        .then((response) => {
-          expect(response.body.message).to.equal('Invalid request format');
-        });
+      const response = await app.handle(
+        buildRequest({
+          path: `/rpc/${TEST_ADDRESS}/blah.json`,
+        })
+      );
+      const result = await response.text();
+      expect(result).to.equal('Invalid request format');
     });
   });
 });
