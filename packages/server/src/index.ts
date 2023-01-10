@@ -35,7 +35,7 @@ export interface HandlerDescription {
 }
 
 /**
- * Implements a Durin gateway service using express.js.
+ * Implements a CCIP-Read gateway service using express.js.
  *
  * Example usage:
  * ```javascript
@@ -63,7 +63,7 @@ export class Server {
   readonly handlers: { [selector: string]: Handler };
 
   /**
-   * Constructs a new Durin gateway server instance.
+   * Constructs a new CCIP-Read gateway server instance.
    */
   constructor() {
     this.handlers = {};
@@ -147,7 +147,7 @@ export class Server {
 
     // Find a function handler for this selector
     const handler = this.handlers[selector];
-    if (handler === undefined) {
+    if (!handler) {
       return {
         status: 404,
         body: { message: `No implementation for function with selector ${selector}` },

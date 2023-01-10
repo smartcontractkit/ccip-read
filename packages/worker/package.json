@@ -27,7 +27,7 @@
         "url": "git+https://github.com/smartcontractkit/ccip-read.js.git"
     },
     "author": "@ensdomains",
-    "module": "dist/durin.js.esm.js",
+    "module": "dist/ccip-read.js.esm.js",
     "license": "MIT",
     "bugs": {
         "url": "https://github.com/smartcontractkit/ccip-read/issues"

@@ -29,13 +29,17 @@ function toInterface(abi: string | readonly (string | Fragment | JsonFragment)[]
   return new Interface(abi);
 }
 
+function getFunctionSelector(calldata: string): string {
+  return calldata.slice(0, 10).toLowerCase();
+}
+
 export interface HandlerDescription {
   type: string;
   func: HandlerFunc;
 }
 
 /**
- * Implements a Durin gateway service using itty-router.js.
+ * Implements a CCIP-Read gateway service using itty-router.js.
  *
  * Example usage:
  * ```javascript
@@ -67,7 +71,7 @@ export class Server {
   readonly handlers: { [selector: string]: Handler };
 
   /**
-   * Constructs a new Durin gateway server instance.
+   * Constructs a new CCIP-Read gateway server instance.
    */
   constructor() {
     this.handlers = {};
@@ -158,11 +162,11 @@ export class Server {
 
   async call(call: RPCCall): Promise<RPCResponse> {
     const calldata = hexlify(call.data);
-    const selector = calldata.slice(0, 10).toLowerCase();
+    const selector = getFunctionSelector(calldata);
 
     // Find a function handler for this selector
     const handler = this.handlers[selector];
-    if (handler === undefined) {
+    if (!handler) {
       return {
         status: 404,
         body: { message: `No implementation for function with selector ${selector}` },

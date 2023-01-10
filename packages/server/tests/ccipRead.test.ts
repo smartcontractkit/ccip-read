@@ -11,7 +11,7 @@ const TEST_ADDRESS = '0x1234567890123456789012345678901234567890';
 async function doCall(server: Server, abi: string[], to: string, funcname: string, args: any[]) {
   const iface = new ethers.utils.Interface(abi);
   const handler = server.handlers[iface.getSighash(funcname)];
-  if (handler === undefined) {
+  if (!handler) {
     throw Error('Unknown handler');
   }
   const calldata = iface.encodeFunctionData(funcname, args);
@@ -26,7 +26,7 @@ async function doCall(server: Server, abi: string[], to: string, funcname: strin
   }
 }
 
-describe('Durin', () => {
+describe('CCIP-Read', () => {
   const abi = ['function getSignedBalance(address addr) public view returns(uint256 balance, bytes sig)'];
 
   describe('server tests', () => {
