@@ -17,6 +17,14 @@ export interface RPCResponse {
 
 export interface ExpressRequest extends express.Request {
   method: string;
+  params: {
+    sender: string;
+    callData: string;
+  };
+  body: {
+    sender: string;
+    data: string;
+  };
 }
 
 export type HandlerFunc = (args: ethers.utils.Result, req: RPCCall) => Promise<Array<any>> | Array<any>;
