@@ -15,6 +15,10 @@ export interface RPCResponse {
   body: any;
 }
 
+export interface ExpressRequest extends express.Request {
+  method: string;
+}
+
 export type HandlerFunc = (args: ethers.utils.Result, req: RPCCall) => Promise<Array<any>> | Array<any>;
 
 interface Handler {
@@ -112,7 +116,7 @@ export class Server {
     return app;
   }
 
-  async handleRequest(req: express.Request, res: express.Response) {
+  async handleRequest(req: ExpressRequest, res: express.Response) {
     let sender: string;
     let callData: string;
 
