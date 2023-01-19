@@ -4,11 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "run() { npx hardhat test; }; run",
-    "deploy": "npx hardhat run --network localhost scripts/deploy.js",
+    "test": "run() { hardhat test; }; run",
+    "deploy": "hardhat run --network localhost scripts/deploy.js",
     "clean": "rm -fr node_modules cache artifacts",
     "lint": "true",
-    "build": "npx hardhat compile"
+    "build": "hardhat compile"
   },
   "author": "Makoto Inoue",
   "license": "ISC",
