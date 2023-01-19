@@ -118,7 +118,7 @@ export class Server {
   makeApp(prefix: string): express.Application {
     const app = express();
     app.use(cors());
-    app.use(express.json());
+    app.use(express.json() as express.RequestHandler);
     app.get(`${prefix}:sender/:callData.json`, this.handleRequest.bind(this));
     app.post(prefix, this.handleRequest.bind(this));
     return app;

@@ -64,5 +64,9 @@
         "cors": "^2.8.5",
         "ethers": "^5.3.1",
         "express": "^4.17.1"
+    },
+    "resolutions": {
+      "@types/express-serve-static-core": "4.17.20",
+      "@types/express": "4.17.2"
     }
 }
