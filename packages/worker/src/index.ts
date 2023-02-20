@@ -1,9 +1,9 @@
-import cors from 'cors';
 import { ethers, BytesLike } from 'ethers';
 import { Fragment, FunctionFragment, Interface, JsonFragment } from '@ethersproject/abi';
 import { hexlify } from '@ethersproject/bytes';
-import express from 'express';
+import { Router } from 'itty-router';
 import { isAddress, isBytesLike } from 'ethers/lib/utils';
+import { IRequest } from './utils/cors';
 
 export interface RPCCall {
   to: BytesLike;
@@ -29,17 +29,21 @@ function toInterface(abi: string | readonly (string | Fragment | JsonFragment)[]
   return new Interface(abi);
 }
 
+function getFunctionSelector(calldata: string): string {
+  return calldata.slice(0, 10).toLowerCase();
+}
+
 export interface HandlerDescription {
   type: string;
   func: HandlerFunc;
 }
 
 /**
- * Implements a CCIP-Read gateway service using express.js.
+ * Implements a CCIP-Read gateway service using itty-router.js.
  *
  * Example usage:
  * ```javascript
- * const ccipread = require('@chainlink/ccip-read-server');
+ * const ccipread = require('@chainlink/ccip-read-cf-worker');
  * const server = new ccipread.Server();
  * const abi = [
  *   'function getSignedBalance(address addr) public view returns(uint256 balance, bytes memory sig)',
@@ -55,7 +59,11 @@ export interface HandlerDescription {
  *   }
  * ]);
  * const app = server.makeApp();
- * app.listen(8080);
+ * module.exports = {
+ *  fetch: function (request, _env, _context) {
+ *    return app.handle(request)
+ *  }
+ * };
  * ```
  */
 export class Server {
@@ -89,30 +97,40 @@ export class Server {
   }
 
   /**
-   * Convenience function to construct an `express` application object for the gateway.
+   * Convenience function to construct an `itty-router` application object for the gateway.
    * Example usage:
    * ```javascript
-   * const ccipread = require('ccip-read');
+   * const ccipread = require('@chainlink/ccip-read-cf-worker');
    * const server = new ccipread.Server();
    * // set up server object here
    * const app = server.makeApp('/');
-   * app.serve(8080);
+   * module.exports = {
+   *  fetch: function (request, _env, _context) {
+   *    return app.handle(request)
+   *  }
+   * };
    * ```
    * The path prefix to `makeApp` will have sender and callData arguments appended.
    * If your server is on example.com and configured as above, the URL template to use
    * in a smart contract would be "https://example.com/{sender}/{callData}.json".
-   * @returns An `express.Application` object configured to serve as a CCIP read gateway.
+   * @returns An `itty-router.Router` object configured to serve as a CCIP read gateway.
    */
-  makeApp(prefix: string): express.Application {
-    const app = express();
-    app.use(cors());
-    app.use(express.json() as express.RequestHandler);
+  makeApp(prefix: string): Router {
+    const app = Router();
+    app.get(prefix, () => new Response('hey ho!', { status: 200 }));
+    /*
+     * uncomment app.options for cors
+     * also wrap responses with cors wrapper
+     * e.g. return wrapCorsHeader(new Response('Invalid request format', { status: 400 }));
+     */
+    // app.options(`${prefix}:sender/:callData.json`, handleCors({ methods: 'GET', maxAge: 86400 }));
     app.get(`${prefix}:sender/:callData.json`, this.handleRequest.bind(this));
+    // app.options(prefix, handleCors({ methods: 'POST', maxAge: 86400 }));
     app.post(prefix, this.handleRequest.bind(this));
     return app;
   }
 
-  async handleRequest(req: express.Request, res: express.Response) {
+  async handleRequest(req: IRequest) {
     let sender: string;
     let callData: string;
 
@@ -120,30 +138,31 @@ export class Server {
       sender = req.params.sender;
       callData = req.params.callData;
     } else {
-      sender = req.body.sender;
-      callData = req.body.data;
+      const body = await req.json();
+      sender = body.sender;
+      callData = body.data;
     }
 
     if (!isAddress(sender) || !isBytesLike(callData)) {
-      res.status(400).json({
-        message: 'Invalid request format',
-      });
-      return;
+      return new Response('Invalid request format', { status: 400 });
     }
 
     try {
       const response = await this.call({ to: sender, data: callData });
-      res.status(response.status).json(response.body);
-    } catch (e) {
-      res.status(500).json({
-        message: `Internal server error: ${(e as any).toString()}`,
+      return new Response(JSON.stringify(response.body), {
+        status: response.status,
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
+    } catch (e) {
+      return new Response(`Internal server error: ${(e as any).toString()}`, { status: 500 });
     }
   }
 
   async call(call: RPCCall): Promise<RPCResponse> {
     const calldata = hexlify(call.data);
-    const selector = calldata.slice(0, 10).toLowerCase();
+    const selector = getFunctionSelector(calldata);
 
     // Find a function handler for this selector
     const handler = this.handlers[selector];

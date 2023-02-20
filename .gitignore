@@ -1,7 +1,8 @@
-.DS_Store
+coverage
 node_modules
 dist
 docs
+.DS_Store
 .env
-yarn-error.log
 .idea
+yarn-error.log
