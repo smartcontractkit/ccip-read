@@ -3,7 +3,7 @@ import { Fragment, FunctionFragment, Interface, JsonFragment } from '@ethersproj
 import { hexlify } from '@ethersproject/bytes';
 import { Router } from 'itty-router';
 import { isAddress, isBytesLike } from 'ethers/lib/utils';
-import { IRequest } from './utils/cors';
+import { IRequest, handleCors } from './utils/cors';
 
 export interface RPCCall {
   to: BytesLike;
@@ -115,7 +115,7 @@ export class Server {
    * in a smart contract would be "https://example.com/{sender}/{callData}.json".
    * @returns An `itty-router.Router` object configured to serve as a CCIP read gateway.
    */
-  makeApp(prefix: string): Router {
+  makeApp(prefix: string, corsEnabled?: false): Router {
     const app = Router();
     app.get(prefix, () => new Response('hey ho!', { status: 200 }));
     /*
@@ -123,9 +123,11 @@ export class Server {
      * also wrap responses with cors wrapper
      * e.g. return wrapCorsHeader(new Response('Invalid request format', { status: 400 }));
      */
-    // app.options(`${prefix}:sender/:callData.json`, handleCors({ methods: 'GET', maxAge: 86400 }));
+    if (corsEnabled) {
+      app.options(`${prefix}:sender/:callData.json`, handleCors({ methods: 'GET', maxAge: 86400 }));
+      app.options(prefix, handleCors({ methods: 'POST', maxAge: 86400 }));
+    }
     app.get(`${prefix}:sender/:callData.json`, this.handleRequest.bind(this));
-    // app.options(prefix, handleCors({ methods: 'POST', maxAge: 86400 }));
     app.post(prefix, this.handleRequest.bind(this));
     return app;
   }
