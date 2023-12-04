@@ -1,9 +1,19 @@
 import { ethers, BytesLike } from 'ethers';
 import { Fragment, FunctionFragment, Interface, JsonFragment } from '@ethersproject/abi';
 import { hexlify } from '@ethersproject/bytes';
-import { Router } from 'itty-router';
+import { Router, createCors } from 'itty-router';
 import { isAddress, isBytesLike } from 'ethers/lib/utils';
-import { IRequest, handleCors } from './utils/cors';
+
+const { corsify, preflight } = createCors();
+
+type MethodType = 'GET' | 'POST';
+
+export interface IRequest extends Request {
+  params: any;
+  method: MethodType;
+  url: string;
+  optional?: string;
+}
 
 export interface RPCCall {
   to: BytesLike;
@@ -115,7 +125,7 @@ export class Server {
    * in a smart contract would be "https://example.com/{sender}/{callData}.json".
    * @returns An `itty-router.Router` object configured to serve as a CCIP read gateway.
    */
-  makeApp(prefix: string, corsEnabled?: false): Router {
+  makeApp(prefix: string) {
     const app = Router();
     app.get(prefix, () => new Response('hey ho!', { status: 200 }));
     /*
@@ -123,10 +133,7 @@ export class Server {
      * also wrap responses with cors wrapper
      * e.g. return wrapCorsHeader(new Response('Invalid request format', { status: 400 }));
      */
-    if (corsEnabled) {
-      app.options(`${prefix}:sender/:callData.json`, handleCors({ methods: 'GET', maxAge: 86400 }));
-      app.options(prefix, handleCors({ methods: 'POST', maxAge: 86400 }));
-    }
+    app.all('*', preflight);
     app.get(`${prefix}:sender/:callData.json`, this.handleRequest.bind(this));
     app.post(prefix, this.handleRequest.bind(this));
     return app;
@@ -151,14 +158,16 @@ export class Server {
 
     try {
       const response = await this.call({ to: sender, data: callData });
-      return new Response(JSON.stringify(response.body), {
-        status: response.status,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      return corsify(
+        new Response(JSON.stringify(response.body), {
+          status: response.status,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+      );
     } catch (e) {
-      return new Response(`Internal server error: ${(e as any).toString()}`, { status: 500 });
+      return corsify(new Response(`Internal server error: ${(e as any).toString()}`, { status: 500 }));
     }
   }
 
