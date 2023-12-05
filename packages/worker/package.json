@@ -1,6 +1,6 @@
 {
     "name": "@chainlink/ccip-read-cf-worker",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Cloudflare worker framework for ccip-read, a secure protocol for offchain data retrieval",
     "main": "dist/index.js",
     "typings": "dist/index.d.ts",
@@ -61,7 +61,7 @@
         "typescript": "^4.7.4"
     },
     "dependencies": {
-        "ethers": "^5.3.1",
-        "itty-router": "^2.6.1"
+        "ethers": "^5.7.2",
+        "itty-router": "^4.0.3"
     }
 }
