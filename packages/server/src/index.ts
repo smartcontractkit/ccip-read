@@ -67,6 +67,28 @@ export class Server {
    */
   constructor() {
     this.handlers = {};
+    this.addMulticallSupport();
+  }
+
+  /**
+   * Add IMulticallable.multicall() support
+   * https://github.com/ensdomains/ens-contracts/blob/staging/contracts/resolvers/IMulticallable.sol
+   */
+  addMulticallSupport() {
+    const self = this;
+    this.add(['function multicall(bytes[] calldata data) external returns (bytes[] memory results)'], [{
+      type: 'multicall',
+      async func(args: ethers.utils.Result, {to}: RPCCall) {
+        return [await Promise.all(args[0].map(async (data: any) => {
+          try {
+            let {status, body} = await self.call({to, data});
+            if (status === 200) return body.data;
+          } catch (err) {
+          }
+          return '0x';
+        }))];
+      }
+    }]);
   }
 
   /**
