@@ -167,32 +167,33 @@ describe('CCIP-Read', () => {
 
   describe('multicall() tests', () => {
     
+    type Fn = (args: any[]) => any;
     type Ok = (args: any[], res: Result) => void;
     type Err = (args: any[], data: string) => void;
     class Impl {
       iface: Interface;
       frag: FunctionFragment;
-      f: (args: any[]) => any;
+      fn: Fn;
       ok: Ok;
       err: Err;
-      constructor(solc: string, f: (...args: any) => any, ok: Ok, err: Err) {
+      constructor(solc: string, f: Fn, ok: Ok, err: Err) {
         this.iface = new Interface([solc]);
         this.frag = this.iface.fragments[0] as FunctionFragment;
-        this.f = f;
+        this.fn = f;
         this.ok = ok;
         this.err = err;
       }
     }
 
     const unexpected = () => expect.fail("unexpected failure");
-    const inc0 = (x: number) => x + 1;
+    const add1 = (x: number) => x + 1;
 
     const inc = new Impl(
       'function inc(uint256 x) external returns (uint256)',
-      ([x]) => [inc0(x.toNumber())],
+      ([x]) => [add1(x.toNumber())],
       ([x], res) => {
         expect(res.length).to.equal(1);
-        expect(res[0].toNumber()).to.equal(inc0(x));
+        expect(res[0].toNumber()).to.equal(add1(x));
       },
       unexpected
     );
@@ -222,7 +223,7 @@ describe('CCIP-Read', () => {
       for (let impl of handlers) {
         server.add(impl.iface, [{
           type: impl.frag.format(),
-          func: (args) => impl.f(args as any[])
+          func: (args) => impl.fn(args as any[]) // downcast Result
         }]);
       }
       const app = server.makeApp('/rpc/');
