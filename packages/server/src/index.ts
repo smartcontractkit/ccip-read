@@ -67,6 +67,31 @@ export class Server {
    */
   constructor() {
     this.handlers = {};
+    this.addMulticallSupport(); // Q: should this be on by default?
+  }
+
+  /**
+   * Add IMulticallable.multicall() support
+   * Errors (missing implemention, handler exception) are encoded as: Error(string)
+   */
+  addMulticallSupport() {
+    const selector = ethers.utils.id('Error(string)').slice(0, 10);
+    this.add(['function multicall(bytes[] calldata data) external returns (bytes[] memory results)'], [{
+      type: 'multicall',
+      func: async(args: ethers.utils.Result, {to}: RPCCall) => [
+        await Promise.all(args[0].map(async (data: any) => {
+          let error;
+          try {
+            let {status, body} = await this.call({to, data});
+            if (status === 200) return body.data; // Q: should this be 2XX?
+            error = body.message || 'unknown error';
+          } catch (err) {
+            error = String(err); // Q: should this include status?
+          }
+          return ethers.utils.hexConcat([selector, ethers.utils.defaultAbiCoder.encode(['string'], [error])]);
+        }))
+      ]
+    }]);
   }
 
   /**
@@ -80,7 +105,6 @@ export class Server {
 
     for (const handler of handlers) {
       const fn = abiInterface.getFunction(handler.type);
-
       this.handlers[Interface.getSighash(fn)] = {
         type: fn,
         func: handler.func,
